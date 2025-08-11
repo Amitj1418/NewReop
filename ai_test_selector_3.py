@@ -1,14 +1,29 @@
 import os
 import re
 import subprocess
+from pathlib import Path
 from git import Repo
 from datetime import datetime
 
+# --- Setup ---
+project_root = Path(__file__).parent.resolve()
 repo = Repo(".")
 
-LOG_DIR = "ai_test_logs"
-os.makedirs(LOG_DIR, exist_ok=True)
+# Create logs directory if not exists
+logs_dir = project_root / "logs"
+logs_dir.mkdir(exist_ok=True)
 
+# Generate log file name with timestamp
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+log_file_path = logs_dir / f"ai_test_selector_log_{timestamp}.txt"
+
+def log_message(message):
+    """Append a message to the log file and print it."""
+    with open(log_file_path, "a", encoding="utf-8") as log_file:
+        log_file.write(message + "\n")
+    print(message)
+
+# --- Step 1: Get exact changed lines ---
 def get_changed_lines():
     try:
         diff_output = subprocess.check_output(
@@ -22,9 +37,10 @@ def get_changed_lines():
 diff_content = get_changed_lines()
 
 if not diff_content.strip():
-    print("No code changes detected.")
+    log_message("No code changes detected.")
     exit()
 
+# --- Step 2: Extract changed files, methods, classes ---
 changed_files = re.findall(r"\+\+\+ b/(.+)", diff_content)
 changed_names = set()
 
@@ -32,10 +48,24 @@ changed_names.update(re.findall(r"^\+\s*def\s+(\w+)", diff_content, re.MULTILINE
 changed_names.update(re.findall(r"^\+\s*class\s+(\w+)", diff_content, re.MULTILINE))
 changed_names.update(re.findall(r"^\+\s*self\.(\w+)", diff_content, re.MULTILINE))
 
-print(f"Changed files: {changed_files}")
-print(f"Changed elements: {changed_names}")
+method_pattern = re.compile(r"^\s*def\s+(\w+)\(.*\):", re.MULTILINE)
+file_methods_map = {}
 
-# Collect all test files
+for file in changed_files:
+    file_path = project_root / file
+    if file_path.exists():
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+            file_methods_map[file] = method_pattern.findall(content)
+
+for file in changed_files:
+    if "page" in file.lower() and file in file_methods_map:
+        changed_names.update(file_methods_map[file])
+
+log_message(f"Changed files: {changed_files}")
+log_message(f"Changed elements: {changed_names}")
+
+# --- Step 3: Get all test files ---
 all_test_files = []
 for root, _, files in os.walk("tests"):
     for f in files:
@@ -43,30 +73,27 @@ for root, _, files in os.walk("tests"):
             all_test_files.append(os.path.join(root, f))
 
 if not all_test_files:
-    print("No test files found.")
+    log_message("No test files found.")
     exit()
 
-# Track reasons
-test_files_to_run = {}
+# --- Step 4: Keyword matching ---
+test_files_to_run = []
 for test_file in all_test_files:
     with open(test_file, "r", encoding="utf-8", errors="ignore") as f:
         test_code = f.read()
-        for name in changed_names:
-            if re.search(rf"\b{name}\b", test_code):
-                test_files_to_run[test_file] = f"Matched keyword: {name}"
-                break
+        if any(re.search(rf"\b{name}\b", test_code) for name in changed_names):
+            test_files_to_run.append(test_file)
 
-# AI fallback if no matches
+# --- Step 5: AI fallback ---
 if not test_files_to_run:
-    print("No direct keyword matches found. Asking AI...\n")
-
+    log_message("No direct keyword matches found. Asking AI...\n")
     prompt = (
         "You are an AI that maps Python code changes to pytest test files.\n"
         "Here are the changed files and modified elements:\n\n"
     )
     for f in changed_files:
         prompt += f"File: {f}\n"
-    prompt += f"Changed elements: {', '.join(changed_names) or 'None'}\n\n"
+    prompt += f"Changed elements: " + (", ".join(changed_names) if changed_names else "None") + "\n\n"
     prompt += (
         "Return ONLY the pytest test file paths (starting with tests/) "
         "that are most likely to be affected. One per line. No explanations."
@@ -80,43 +107,34 @@ if not test_files_to_run:
             timeout=25
         )
         ai_output = ai_result.stdout.decode().strip()
-        ai_tests = [
-            line.strip()
-            for line in ai_output.splitlines()
-            if line.strip().endswith(".py") and os.path.exists(line.strip())
-        ]
-        for t in ai_tests:
-            test_files_to_run[t] = "AI suggested"
+
+        ai_tests = []
+        for line in ai_output.splitlines():
+            line = line.strip()
+            if line.endswith(".py"):
+                test_path = (project_root / line).resolve()
+                if test_path.exists():
+                    ai_tests.append(str(test_path.relative_to(project_root)))
+
+        test_files_to_run.extend(ai_tests)
     except subprocess.TimeoutExpired:
-        print("Ollama request timed out. Skipping AI step.")
+        log_message("Ollama request timed out. Skipping AI step.")
+
+# --- Step 6: Run matched tests ---
+test_files_to_run = list(set(test_files_to_run))
 
 if not test_files_to_run:
-    print("No relevant test files found.")
+    log_message("No relevant test files found.")
     exit()
 
-# Show reason log in console
-print("\n📋 Test Selection Summary:")
-for test_file, reason in test_files_to_run.items():
-    print(f" - {test_file} → {reason}")
+log_message("Selected tests to run:\n" + "\n".join(test_files_to_run))
 
-# Save to log file
-timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-log_path = os.path.join(LOG_DIR, f"test_selection_{timestamp}.log")
+# Run pytest and capture output
+pytest_command = ["pytest"] + test_files_to_run
+result = subprocess.run(pytest_command, capture_output=True, text=True)
 
-with open(log_path, "w", encoding="utf-8") as log_file:
-    log_file.write(f"=== Test Selection Log ===\n")
-    log_file.write(f"Run Time: {datetime.now()}\n\n")
-    log_file.write(f"Changed Files:\n")
-    for f in changed_files:
-        log_file.write(f" - {f}\n")
-    log_file.write(f"\nChanged Elements:\n")
-    for e in changed_names:
-        log_file.write(f" - {e}\n")
-    log_file.write("\nSelected Tests:\n")
-    for test_file, reason in test_files_to_run.items():
-        log_file.write(f" - {test_file} → {reason}\n")
-
-print(f"\n📝 Log saved to: {log_path}")
-
-# Run tests
-os.system(f"pytest {' '.join(test_files_to_run.keys())}")
+# Log pytest output
+log_message("===== PYTEST OUTPUT START =====")
+log_message(result.stdout)
+log_message(result.stderr)
+log_message("===== PYTEST OUTPUT END =====")

@@ -16,7 +16,7 @@ class CheckoutPage:
     LOGIN_BUTTON = "//button[@type='submit']"
     SUPER_ADMIN_LINK = "//div[@class='mat-tab-label-content' and text()='Super Admin']"
     HOSPITAL_USER_LINK = "//div[@class='mat-tab-label-content' and text()='Hospital User']"
-    TOAST_MESSAGE = "//div[@id='toast-container']"
+    TOAST_MESSAGE = "//div[@id='toast-containers']"
     USERNAME_LABEL = "//span[@class='user-name']"
 
 
