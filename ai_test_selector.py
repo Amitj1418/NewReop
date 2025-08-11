@@ -22,12 +22,11 @@ if not changed_files:
 
 print(f"Changed files: {changed_files}")
 
-# --- Step 2: Read code & extract only relevant parts ---
+# --- Step 2: Read code & extract function/class names ---
 def extract_summary(file_path):
     try:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             code = f.read()
-        # Only keep function and class definitions
         functions = re.findall(r"def\s+(\w+)\s*\(", code)
         classes = re.findall(r"class\s+(\w+)\s*\(", code)
         return {
@@ -39,8 +38,20 @@ def extract_summary(file_path):
 
 changed_summary = {file: extract_summary(file) for file in changed_files}
 
-# --- Step 3: Build prompt for Ollama ---
-prompt = "You are an AI that maps Python code changes to pytest test files.\n"
+# --- Step 3: List all existing pytest test files ---
+all_test_files = []
+for root, _, files in os.walk("tests"):
+    for f in files:
+        if f.startswith("test") and f.endswith(".py"):
+            all_test_files.append(os.path.join(root, f))
+
+if not all_test_files:
+    print("No test files found in the 'tests' directory.")
+    exit()
+
+# --- Step 4: Build prompt for Ollama ---
+prompt = "You are an AI that maps Python code changes to existing pytest test files.\n"
+prompt += f"Here is the list of existing test files:\n{all_test_files}\n\n"
 prompt += "Here are the changed files and their modified elements:\n\n"
 
 for file, summary in changed_summary.items():
@@ -49,8 +60,9 @@ for file, summary in changed_summary.items():
     prompt += f"Classes: {', '.join(summary['classes']) or 'None'}\n\n"
 
 prompt += (
-    "Based on these changes, return ONLY the pytest test file paths that should be run. "
-    "One per line, no extra explanation."
+    "From the provided list of test files, choose only those most relevant "
+    "to test the changed code. Output only file paths exactly as they appear in the list, "
+    "one per line. Do not make up any new file paths."
 )
 
 print("\nQuerying Ollama for test suggestions...\n")
@@ -60,24 +72,28 @@ try:
         ["ollama", "run", "mistral"],
         input=prompt.encode("utf-8"),
         capture_output=True,
-        timeout=30  # Reduced timeout
+        timeout=30
     )
     output = result.stdout.decode().strip()
 except subprocess.TimeoutExpired:
     print("Ollama request timed out. Using local keyword matching instead.\n")
     output = ""
 
-# --- Step 4: AI failed? Use fallback ---
-if not output:
+# --- Step 5: Process AI output ---
+if output:
+    # Keep only valid test files from AI output
+    test_files = [t.strip() for t in output.splitlines() if t.strip() in all_test_files]
+else:
+    # Fallback: match changed file names against real test files
     test_files = []
     for file in changed_files:
         base_name = os.path.splitext(os.path.basename(file))[0]
-        for root, _, files in os.walk("tests"):
-            for f in files:
-                if f.startswith("test") and base_name in f:
-                    test_files.append(os.path.join(root, f))
-else:
-    test_files = [t.strip() for t in output.splitlines() if t.strip().endswith(".py")]
+        for test_file in all_test_files:
+            if base_name in os.path.basename(test_file):
+                test_files.append(test_file)
+
+# Remove duplicates
+test_files = list(set(test_files))
 
 if not test_files:
     print("No relevant test files found.")
@@ -85,6 +101,6 @@ if not test_files:
 
 print("Selected tests:\n", "\n".join(test_files))
 
-# --- Step 5: Run only the suggested tests ---
+# --- Step 6: Run only the suggested tests ---
 print("\nRunning suggested tests...\n")
 os.system(f"pytest {' '.join(test_files)}")
