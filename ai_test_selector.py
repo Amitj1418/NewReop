@@ -2,12 +2,21 @@ import os
 import subprocess
 from git import Repo
 
-# --- Step 1: Detect changed files ---
+# --- Step 1: Detect changed files in the latest commit ---
 repo = Repo(".")
-changed_files = [item.a_path for item in repo.index.diff("HEAD")]
+if repo.head.is_detached:
+    print("Detached HEAD state. Cannot find last commit changes.")
+    exit()
+
+last_commit = repo.head.commit
+if not last_commit.parents:
+    print("No parent commit found — this is the first commit.")
+    changed_files = [item.a_path for item in last_commit.diff(None)]  # first commit case
+else:
+    changed_files = [item.a_path for item in last_commit.diff(last_commit.parents[0])]
 
 if not changed_files:
-    print("No changed files detected since last commit.")
+    print("No changed files in the last commit.")
     exit()
 
 print(f"Changed files: {changed_files}")
@@ -20,9 +29,7 @@ def get_file_content(file_path):
     except FileNotFoundError:
         return ""
 
-changed_code = {}
-for file in changed_files:
-    changed_code[file] = get_file_content(file)
+changed_code = {file: get_file_content(file) for file in changed_files}
 
 # --- Step 3: Ask Ollama which tests to run ---
 prompt = (
