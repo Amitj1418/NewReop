@@ -90,7 +90,7 @@ if not test_files_to_run:
             timeout=25
         )
         ai_output = ai_result.stdout.decode().strip()
-        ai_tests = [line.strip() for line in ai_output.splitlines() if line.strip().endswith(".py")]
+        ai_tests = [line.strip() for line in ai_output.splitlines() if line.strip().endswith(".py") and os.path.exists(line.strip())]
 
         test_files_to_run.extend(ai_tests)
     except subprocess.TimeoutExpired:

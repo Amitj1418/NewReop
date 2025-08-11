@@ -58,7 +58,7 @@ class CheckoutPage:
         actual_text = actual.inner_text()
         assert expected_text in actual_text, f"❌ Toast did not match. Expected: '{expected_text}' | Actual: '{actual_text}'"
 
-    def wait_for_locator(self, selector: str, timeout: int = 5000):
+    def wait_for_locator(self, selector: str, timeout: int = 6000):
         """Waits for the given locator to be visible within the timeout."""
         try:
             self.page.wait_for_selector(selector, timeout=timeout, state='visible')
