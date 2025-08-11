@@ -19,4 +19,3 @@ class TestCheckout:
     def test_login_super_admin(self):
        self.login_page.login_with_super_admin("ayyajj@futurismtechnologies.com", "Ayyaj@1234")
        self.login_page.assert_toast_contains("Invalid Email or Password")
-       self.login_page.login_with_hospital_user("ayyajj@futurismtechnologies.com","Ayyaj@1234")
