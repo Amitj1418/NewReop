@@ -47,12 +47,23 @@ if not all_test_files:
     print("No test files found.")
     exit()
 
-# --- Step 4: Keyword matching ---
+# --- Step 4: Smarter keyword + file relevance matching ---
 test_files_to_run = []
+
 for test_file in all_test_files:
     with open(test_file, "r", encoding="utf-8", errors="ignore") as f:
         test_code = f.read()
-        if any(re.search(rf"\b{name}\b", test_code) for name in changed_names):
+
+        # Check if the changed page/module is imported in the test
+        imported = False
+        for fpath in changed_files:
+            page_base = os.path.splitext(os.path.basename(fpath))[0]
+            if re.search(rf"(from|import)\s+.*{page_base}", test_code, re.IGNORECASE):
+                imported = True
+                break
+
+        # If test imports the changed file AND uses changed names → select it
+        if imported and any(re.search(rf"\b{name}\b", test_code) for name in changed_names):
             test_files_to_run.append(test_file)
 
 # --- Step 5: AI fallback ---
