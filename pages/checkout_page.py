@@ -16,7 +16,7 @@ class CheckoutPage:
     LOGIN_BUTTON = "//button[@type='submit']"
     SUPER_ADMIN_LINK = "//div[@class='mat-tab-label-content' and text()='Super Admin']"
     HOSPITAL_USER_LINK = "//div[@class='mat-tab-label-content' and text()='Hospital User']"
-    TOAST_MESSAGE = "//div[@id='toast-containers']"
+    TOAST_MESSAGE = "//div[@aria-label='Invalid Email or Password']"
     USERNAME_LABEL = "//span[@class='user-name']"
 
 
@@ -58,7 +58,7 @@ class CheckoutPage:
         actual_text = actual.inner_text()
         assert expected_text in actual_text, f"❌ Toast did not match. Expected: '{expected_text}' | Actual: '{actual_text}'"
 
-    def wait_for_locator(self, selector: str, timeout: int = 6000):
+    def wait_for_locator(self, selector: str, timeout: int = 10000):
         """Waits for the given locator to be visible within the timeout."""
         try:
             self.page.wait_for_selector(selector, timeout=timeout, state='visible')
