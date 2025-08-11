@@ -82,7 +82,6 @@ except subprocess.TimeoutExpired:
 if output:
     test_files = [t.strip() for t in output.splitlines() if t.strip() in all_test_files]
 else:
-    # Smarter fallback: match filename OR function/class usage
     test_files = []
     changed_names = set()
     for summary in changed_summary.values():
@@ -93,9 +92,20 @@ else:
         try:
             with open(test_file, "r", encoding="utf-8", errors="ignore") as f:
                 test_code = f.read()
-            if any(name in test_code for name in changed_names) or \
-               any(os.path.splitext(os.path.basename(f))[0] in test_file for f in changed_files):
+
+            # Match whole words only
+            name_match = any(
+                re.search(rf"\b{name}\b", test_code)
+                for name in changed_names if name
+            )
+
+            # Match exact file name (without extension)
+            base_names = [os.path.splitext(os.path.basename(f))[0] for f in changed_files]
+            file_match = os.path.splitext(os.path.basename(test_file))[0] in base_names
+
+            if name_match or file_match:
                 test_files.append(test_file)
+
         except FileNotFoundError:
             continue
 
