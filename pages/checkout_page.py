@@ -14,7 +14,7 @@ class CheckoutPage:
     EMAIL_TEXT_INPUT = "//input[@placeholder='Email']"
     PASSWORD_TEXT_INPUT = "//input[@type='password']"
     LOGIN_BUTTON = "//button[@type='submit']"
-    SUPER_ADMIN_LINK = "//div[@class='mat-tab-label-content' and text()='Super Admin']"
+    SUPER_ADMIN_LINK = "//div[@class='mat-tab-label-content' and text()='Super Admins']"
     HOSPITAL_USER_LINK = "//div[@class='mat-tab-label-content' and text()='Hospital User']"
     TOAST_MESSAGE = "//div[@id='toast-container']"
     USERNAME_LABEL = "//span[@class='user-name']"

@@ -87,7 +87,7 @@ if not test_files_to_run:
             ["ollama", "run", "mistral"],
             input=prompt.encode("utf-8"),
             capture_output=True,
-            timeout=25
+            timeout=60
         )
         ai_output = ai_result.stdout.decode().strip()
         ai_tests = [line.strip() for line in ai_output.splitlines() if line.strip().endswith(".py") and os.path.exists(line.strip())]
