@@ -13,6 +13,7 @@ class TestLoginScenarios:
         self.login_page = LoginPage(self.page)
 
     def test_valid_login_super_admin(self):
+        self.login_page.click_hospital_user_link()
         self.login_page.login_with_super_admin("ayyajj@futurismtechnologies.com", "Ayyaj@123")
         self.login_page.validate_dashboard_page()
         assert self.login_page.validate_url("https://synergymedqa.futurismdemo.com/#/admin/home")
