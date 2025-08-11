@@ -25,7 +25,7 @@ class LoginPage:
         self.page.click(self.LOGIN_BUTTON)
 
 
-    def login_with_hospital_user(self, username, password):
+    def login_with_hospital_users(self, username, password):
         self.click_hospital_user_link()
         self.page.fill(self.EMAIL_TEXT_INPUT, username)
         self.page.fill(self.PASSWORD_TEXT_INPUT, password)
