@@ -1,15 +1,15 @@
 import pytest
-from pages.Login_Page_2 import LoginPage2
+from pages.checkout_page import CheckoutPage
 
 
 @pytest.mark.login
 @pytest.mark.usefixtures("page")
-class TestLoginScenarios2:
+class TestCheckout:
 
     @pytest.fixture(autouse=True)
     def _setup(self, page):  # ✅ underscore avoids fixture-name conflicts
         self.page = page
-        self.login_page = LoginPage2(self.page)
+        self.login_page = CheckoutPage(self.page)
 
     def test_valid_login_super_admin(self):
         self.login_page.login_with_super_admin("ayyajj@futurismtechnologies.com", "Ayyaj@123")

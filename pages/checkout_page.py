@@ -6,7 +6,7 @@ from pages.Smart_Base_Page import BasePage
 
 
 @pytest.mark.login
-class LoginPage2:
+class CheckoutPage:
     def __init__(self, page):
         self.page = page
         self.base_page_instance = BasePage(self.page)
