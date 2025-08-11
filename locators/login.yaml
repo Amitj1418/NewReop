@@ -1,0 +1,7 @@
+email_input: "//input[@placeholder='Email']"
+password_input: "//input[@type='password']"
+login_button: "//button[@type='submit']"
+super_admin_link: "//div[@class='mat-tab-label-content' and text()='Super Admin']"
+hospital_user_link: "//div[@class='mat-tab-label-content' and text()='Super Admin']"
+toast_message: "//div[@id='toast-container']"
+username_label: "//span[@class='user-name']"

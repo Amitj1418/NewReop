@@ -1,0 +1,1 @@
+BASE_URL ="https://synergymedqa.futurismdemo.com/#/login"
