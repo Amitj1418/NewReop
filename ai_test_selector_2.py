@@ -1,8 +1,10 @@
 import os
 import re
 import subprocess
+from pathlib import Path
 from git import Repo
 
+project_root = Path(__file__).parent.resolve()
 repo = Repo(".")
 
 # --- Step 1: Get exact changed lines ---
@@ -26,12 +28,26 @@ if not diff_content.strip():
 changed_files = re.findall(r"\+\+\+ b/(.+)", diff_content)
 changed_names = set()
 
-# Methods & classes
+# Detect methods/classes/locators from changed lines
 changed_names.update(re.findall(r"^\+\s*def\s+(\w+)", diff_content, re.MULTILINE))
 changed_names.update(re.findall(r"^\+\s*class\s+(\w+)", diff_content, re.MULTILINE))
-
-# Locators / variables
 changed_names.update(re.findall(r"^\+\s*self\.(\w+)", diff_content, re.MULTILINE))
+
+# --- Step 2b: If locator/method body changes, capture the method name too ---
+method_pattern = re.compile(r"^\s*def\s+(\w+)\(.*\):", re.MULTILINE)
+file_methods_map = {}
+
+for file in changed_files:
+    file_path = project_root / file
+    if file_path.exists():
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+            file_methods_map[file] = method_pattern.findall(content)
+
+# If file is a page class, include all methods in that file
+for file in changed_files:
+    if "page" in file.lower() and file in file_methods_map:
+        changed_names.update(file_methods_map[file])
 
 print(f"Changed files: {changed_files}")
 print(f"Changed elements: {changed_names}")
@@ -47,23 +63,12 @@ if not all_test_files:
     print("No test files found.")
     exit()
 
-# --- Step 4: Smarter keyword + file relevance matching ---
+# --- Step 4: Keyword matching ---
 test_files_to_run = []
-
 for test_file in all_test_files:
     with open(test_file, "r", encoding="utf-8", errors="ignore") as f:
         test_code = f.read()
-
-        # Check if the changed page/module is imported in the test
-        imported = False
-        for fpath in changed_files:
-            page_base = os.path.splitext(os.path.basename(fpath))[0]
-            if re.search(rf"(from|import)\s+.*{page_base}", test_code, re.IGNORECASE):
-                imported = True
-                break
-
-        # If test imports the changed file AND uses changed names → select it
-        if imported and any(re.search(rf"\b{name}\b", test_code) for name in changed_names):
+        if any(re.search(rf"\b{name}\b", test_code) for name in changed_names):
             test_files_to_run.append(test_file)
 
 # --- Step 5: AI fallback ---
@@ -76,7 +81,7 @@ if not test_files_to_run:
     )
     for f in changed_files:
         prompt += f"File: {f}\n"
-    prompt += f"Changed elements: {', '.join(changed_names) or 'None'}\n\n"
+    prompt += f"Changed elements: " + (", ".join(changed_names) if changed_names else "None") + "\n\n"
     prompt += (
         "Return ONLY the pytest test file paths (starting with tests/) "
         "that are most likely to be affected. One per line. No explanations."
@@ -87,10 +92,17 @@ if not test_files_to_run:
             ["ollama", "run", "mistral"],
             input=prompt.encode("utf-8"),
             capture_output=True,
-            timeout=60
+            timeout=25
         )
         ai_output = ai_result.stdout.decode().strip()
-        ai_tests = [line.strip() for line in ai_output.splitlines() if line.strip().endswith(".py") and os.path.exists(line.strip())]
+
+        ai_tests = []
+        for line in ai_output.splitlines():
+            line = line.strip()
+            if line.endswith(".py"):
+                test_path = (project_root / line).resolve()
+                if test_path.exists():
+                    ai_tests.append(str(test_path.relative_to(project_root)))
 
         test_files_to_run.extend(ai_tests)
     except subprocess.TimeoutExpired:
