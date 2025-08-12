@@ -1,0 +1,7 @@
+2025-08-12 15:14:17,936 [INFO] === AI Test Selector Started ===
+2025-08-12 15:14:17,937 [DEBUG] sys.platform='win32', git_executable='git'
+2025-08-12 15:14:17,992 [INFO] No staged changes found, checking last commit...
+2025-08-12 15:14:18,048 [INFO] Fetched git diff successfully.
+2025-08-12 15:14:18,048 [INFO] Changed files: ['ai_test_selector_3.py', 'pages/checkout_page.py']
+2025-08-12 15:14:18,048 [INFO] Changed methods: {'find_impacted_tests', 'extract_changed_files_and_methods'}
+2025-08-12 15:14:18,056 [WARNING] No relevant test files found.
