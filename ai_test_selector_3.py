@@ -64,22 +64,26 @@ def get_all_test_files():
     return all_tests
 
 
-def find_tests_using_methods(test_files, method_names):
-    """Return test files that directly reference any changed method."""
-    matched_files = []
-    if not method_names:
-        return matched_files
+def find_tests_using_methods(test_files, changed_methods):
+    matched_tests = []
+    patterns = [
+        re.compile(rf'\b{method}\s*\(') for method in changed_methods
+    ] + [
+        re.compile(rf'\.\s*{method}\s*\(') for method in changed_methods
+    ]
 
     for test_file in test_files:
         try:
-            with open(test_file, "r", encoding="utf-8", errors="ignore") as f:
+            with open(test_file, 'r', encoding='utf-8') as f:
                 content = f.read()
-            if any(re.search(rf'\b{method}\b', content) for method in method_names):
-                matched_files.append(test_file)
+
+            if any(p.search(content) for p in patterns):
+                matched_tests.append(test_file)
+
         except Exception as e:
             logging.error(f"Error reading {test_file}: {e}")
 
-    return matched_files
+    return matched_tests
 
 # -----------------------------
 # AI fallback
