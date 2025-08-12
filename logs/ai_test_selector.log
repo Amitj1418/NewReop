@@ -1,0 +1,4 @@
+2025-08-12 20:13:25 [INFO] === AI Test Selector Started ===
+2025-08-12 20:13:25 [INFO] Changed files: ['ai_test_selector_3.py', 'pages/checkout_page.py']
+2025-08-12 20:13:25 [INFO] Changed methods detected: {'assert_toast_contains'}
+2025-08-12 20:13:25 [INFO] Running tests that reference changed methods: ['tests/test_002_validate_waning_message.py']
