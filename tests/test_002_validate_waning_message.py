@@ -11,7 +11,7 @@ class TestValidate:
         self.page = page
         self.login_page = CheckoutPage(self.page)
 
-    def validate_super_admin_warning_message(self):
+    def test_super_admin_warning_message(self):
        self.login_page.login_with_super_admin("ayyajj@futurismtechnologies.com", "Ayyaj@1234")
        self.login_page.assert_toast_contains("Invalid Email or Password")
 
