@@ -81,13 +81,34 @@ if not all_test_files:
     print("No test files found.")
     exit()
 
-# --- Step 4: Keyword matching ---
+# --- Step 4: More precise method matching ---
+def strip_comments_and_docstrings(code):
+    """Remove Python comments and docstrings."""
+    # Remove docstrings
+    code = re.sub(r'("""|\'\'\')(?:.|\n)*?\1', '', code)
+    # Remove single-line comments
+    code = re.sub(r'#.*', '', code)
+    return code
+
 test_files_to_run = []
+
 for test_file in all_test_files:
+    # If test file itself was changed, always run it
+    if any(test_file.replace("\\", "/") == cf for cf in changed_files):
+        test_files_to_run.append(test_file)
+        logging.info(f"Directly selected changed test file: {test_file}")
+        continue
+
     with open(test_file, "r", encoding="utf-8", errors="ignore") as f:
-        test_code = f.read()
-        if any(re.search(rf"\b{name}\b", test_code) for name in changed_names):
-            test_files_to_run.append(test_file)
+        raw_code = f.read()
+        test_code = strip_comments_and_docstrings(raw_code)
+
+        for name in changed_names:
+            pattern = rf"\b(?:\w+|self)\.{name}\s*\("
+            if re.search(pattern, test_code):
+                test_files_to_run.append(test_file)
+                logging.info(f"Matched method '{name}' in test file: {test_file}")
+                break
 
 # --- Step 5: AI fallback ---
 if not test_files_to_run:
