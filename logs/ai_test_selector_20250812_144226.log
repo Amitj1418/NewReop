@@ -1,7 +1,0 @@
-2025-08-12 14:42:26,567 [INFO] === AI Test Selector Started ===
-2025-08-12 14:42:26,568 [DEBUG] sys.platform='win32', git_executable='git'
-2025-08-12 14:42:26,619 [INFO] Fetched git diff successfully.
-2025-08-12 14:42:26,620 [INFO] Changed files: ['ai_test_selector_3.py', 'pages/checkout_page.py']
-2025-08-12 14:42:26,620 [INFO] Changed methods from diff: set()
-2025-08-12 14:42:26,621 [INFO] Changed classes & methods: {}
-2025-08-12 14:42:26,622 [WARNING] No relevant test files found.
