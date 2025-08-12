@@ -2,274 +2,351 @@
 import ast
 import os
 import sys
-import difflib
 import subprocess
 from pathlib import Path
-from typing import List, Dict, Set, Tuple
-import importlib.util
+from typing import List, Dict, Set, Tuple, Optional
+import re
+import argparse
 
 
-class ChangeDetector:
-    """Detects changes in Python files and identifies impact on test cases."""
+class GitChangeDetector:
+    """Detects git changes with precise method-level analysis."""
 
     def __init__(self, project_root: str = None):
         self.project_root = Path(project_root) if project_root else Path.cwd()
-        self.pages_dir = self.project_root / "pages"
-        self.tests_dir = self.project_root / "tests"
 
-    def get_git_changes(self) -> Tuple[List[str], List[str]]:
-        """Get modified and added files from git status."""
+    def get_changed_files(self) -> List[str]:
+        """Get list of changed files from git diff."""
         try:
-            # Get staged changes
-            result = subprocess.run(['git', 'diff', '--cached', '--name-only'],
-                                    capture_output=True, text=True, cwd=self.project_root)
-            staged_files = [f for f in result.stdout.strip().split('\n') if f.endswith('.py')]
-
-            # Get unstaged changes
+            # Check unstaged changes
             result = subprocess.run(['git', 'diff', '--name-only'],
                                     capture_output=True, text=True, cwd=self.project_root)
-            unstaged_files = [f for f in result.stdout.strip().split('\n') if f.endswith('.py')]
+            unstaged = [f for f in result.stdout.strip().split('\n') if f and f.endswith('.py')]
 
-            return staged_files, unstaged_files
+            # Check staged changes
+            result = subprocess.run(['git', 'diff', '--cached', '--name-only'],
+                                    capture_output=True, text=True, cwd=self.project_root)
+            staged = [f for f in result.stdout.strip().split('\n') if f and f.endswith('.py')]
+
+            return list(set(unstaged + staged))
+
         except subprocess.CalledProcessError:
-            return [], []
+            print("❌ Error: Not a git repository or git not available")
+            return []
 
-    def extract_methods_from_file(self, file_path: Path) -> Dict[str, int]:
-        """Extract all method names and their line numbers from a Python file."""
-        methods = {}
+
+class CodeAnalyzer:
+    """Analyzes Python code structure and changes."""
+
+    @staticmethod
+    def extract_functions_and_classes(file_path: Path) -> Dict[str, Dict]:
+        """Extract all functions and classes with their line numbers."""
+        if not file_path.exists():
+            return {}
+
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
             tree = ast.parse(content)
+            elements = {}
 
             for node in ast.walk(tree):
                 if isinstance(node, ast.FunctionDef):
-                    methods[node.name] = node.lineno
+                    elements[node.name] = {
+                        'type': 'function',
+                        'line': node.lineno,
+                        'class': None
+                    }
                 elif isinstance(node, ast.ClassDef):
+                    elements[node.name] = {
+                        'type': 'class',
+                        'line': node.lineno,
+                        'class': None
+                    }
+                    # Get class methods
                     for class_node in node.body:
                         if isinstance(class_node, ast.FunctionDef):
-                            methods[f"{node.name}.{class_node.name}"] = class_node.lineno
+                            elements[f"{node.name}.{class_node.name}"] = {
+                                'type': 'method',
+                                'line': class_node.lineno,
+                                'class': node.name,
+                                'method': class_node.name
+                            }
+
+            return elements
 
         except Exception as e:
-            print(f"Error parsing {file_path}: {e}")
+            print(f"⚠️ Error parsing {file_path}: {e}")
+            return {}
 
-        return methods
-
-    def get_changed_methods(self, file_path: str) -> Set[str]:
-        """Identify which specific methods changed in a file."""
+    @staticmethod
+    def get_changed_methods(file_path: str, project_root: Path) -> Set[str]:
+        """Get specific methods/functions that changed in a file."""
         changed_methods = set()
 
         try:
-            # Get the diff for the specific file
-            result = subprocess.run(['git', 'diff', '--unified=3', file_path],
-                                    capture_output=True, text=True, cwd=self.project_root)
-            diff_output = result.stdout
+            # Get diff with context
+            result = subprocess.run(['git', 'diff', '--unified=5', file_path],
+                                    capture_output=True, text=True, cwd=project_root)
 
-            if not diff_output:
+            if not result.stdout:
                 # Try staged changes
-                result = subprocess.run(['git', 'diff', '--cached', '--unified=3', file_path],
-                                        capture_output=True, text=True, cwd=self.project_root)
-                diff_output = result.stdout
+                result = subprocess.run(['git', 'diff', '--cached', '--unified=5', file_path],
+                                        capture_output=True, text=True, cwd=project_root)
 
-            # Parse diff to find changed line numbers
+            diff_content = result.stdout
+            if not diff_content:
+                return changed_methods
+
+            # Extract changed line numbers
             changed_lines = set()
-            current_start = 0
+            lines = diff_content.split('\n')
+            current_line = 0
 
-            for line in diff_output.split('\n'):
+            for line in lines:
                 if line.startswith('@@'):
-                    # Extract line numbers from @@ -old_start,old_count +new_start,new_count @@
-                    parts = line.split(' ')
-                    if len(parts) >= 3:
-                        new_part = parts[2]  # +new_start,new_count
-                        if ',' in new_part:
-                            current_start = int(new_part[1:].split(',')[0])
-                        else:
-                            current_start = int(new_part[1:])
+                    # Extract new file line numbers
+                    match = re.search(r'\+(\d+),?(\d+)?', line)
+                    if match:
+                        start = int(match.group(1))
+                        count = int(match.group(2)) if match.group(2) else 1
+                        current_line = start
                 elif line.startswith('+') and not line.startswith('+++'):
-                    # This is an added line
-                    changed_lines.add(current_start)
-                    current_start += 1
+                    changed_lines.add(current_line)
+                    current_line += 1
                 elif line.startswith('-') and not line.startswith('---'):
-                    # This is a removed line, don't increment current_start
-                    changed_lines.add(current_start)
+                    # Don't increment for removed lines
+                    pass
                 elif not line.startswith('-'):
-                    # Context line or unchanged line
-                    current_start += 1
+                    current_line += 1
 
-            # Map changed lines to methods with better range detection
-            file_methods = self.extract_methods_from_file(Path(file_path))
+            # Map changed lines to methods
+            file_elements = CodeAnalyzer.extract_functions_and_classes(Path(file_path))
 
-            # Get method ranges (start to next method or end of file)
-            with open(Path(file_path), 'r', encoding='utf-8') as f:
-                total_lines = len(f.readlines())
+            # Create method ranges
+            sorted_elements = sorted(file_elements.items(), key=lambda x: x[1]['line'])
 
-            method_ranges = {}
-            sorted_methods = sorted(file_methods.items(), key=lambda x: x[1])
-
-            for i, (method_name, start_line) in enumerate(sorted_methods):
-                if i < len(sorted_methods) - 1:
-                    end_line = sorted_methods[i + 1][1] - 1
+            for i, (name, info) in enumerate(sorted_elements):
+                start_line = info['line']
+                # Find end line (next element's start or end of file)
+                if i < len(sorted_elements) - 1:
+                    end_line = sorted_elements[i + 1][1]['line'] - 1
                 else:
-                    end_line = total_lines
-                method_ranges[method_name] = (start_line, end_line)
+                    try:
+                        with open(file_path, 'r') as f:
+                            end_line = len(f.readlines())
+                    except:
+                        end_line = start_line + 50  # fallback
 
-            # Check which methods contain changed lines
-            for method_name, (start, end) in method_ranges.items():
-                if any(start <= line <= end for line in changed_lines):
-                    # Extract just the method name without class prefix
-                    if '.' in method_name:
-                        changed_methods.add(method_name.split('.', 1)[1])
+                # Check if any changed line falls in this method's range
+                if any(start_line <= line <= end_line for line in changed_lines):
+                    if info['type'] == 'method':
+                        changed_methods.add(info['method'])
                     else:
-                        changed_methods.add(method_name)
+                        changed_methods.add(name)
 
         except Exception as e:
-            print(f"Error analyzing changes in {file_path}: {e}")
+            print(f"⚠️ Error analyzing changes in {file_path}: {e}")
 
         return changed_methods
 
-    def find_test_dependencies(self, page_class: str, changed_methods: Set[str] = None) -> List[str]:
-        """Find test files that use the given page class and specific methods."""
-        dependent_tests = []
 
-        # Search all test files for imports and usage
-        for test_file in self.tests_dir.glob("test_*.py"):
-            try:
-                with open(test_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
+class TestImpactAnalyzer:
+    """Analyzes which tests are impacted by code changes."""
 
-                # Check if the page class is imported
-                if page_class in content:
-                    tree = ast.parse(content)
+    def __init__(self, project_root: Path):
+        self.project_root = project_root
+        self.tests_dir = project_root / "tests"
 
-                    # If no specific methods changed, return the test file
-                    if not changed_methods:
-                        dependent_tests.append(str(test_file.relative_to(self.project_root)))
-                        continue
+    def find_all_test_files(self) -> List[Path]:
+        """Find all test files in the tests directory."""
+        test_files = []
+        if self.tests_dir.exists():
+            for test_file in self.tests_dir.glob("test_*.py"):
+                test_files.append(test_file)
+        return test_files
 
-                    # Check if specific methods are used
-                    for node in ast.walk(tree):
-                        if isinstance(node, ast.Attribute):
-                            method_name = node.attr
-                            if method_name in changed_methods:
-                                dependent_tests.append(str(test_file.relative_to(self.project_root)))
-                                break
-                        elif isinstance(node, ast.Call):
-                            if hasattr(node.func, 'attr'):
-                                method_name = node.func.attr
-                                if method_name in changed_methods:
-                                    dependent_tests.append(str(test_file.relative_to(self.project_root)))
-                                    break
+    def analyze_test_dependencies(self, test_file: Path) -> Dict[str, Set[str]]:
+        """Analyze which page classes and methods a test file uses."""
+        dependencies = {}
 
-            except Exception as e:
-                print(f"Error analyzing test file {test_file}: {e}")
+        try:
+            with open(test_file, 'r', encoding='utf-8') as f:
+                content = f.read()
 
-        return list(set(dependent_tests))  # Remove duplicates
+            tree = ast.parse(content)
+
+            # Find imports from pages
+            imported_pages = set()
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module and 'pages' in node.module:
+                    for alias in node.names:
+                        imported_pages.add(alias.name)
+
+            # For each imported page, find which methods are called
+            for page_class in imported_pages:
+                used_methods = set()
+
+                # Find method calls on page objects
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.Attribute):
+                        # Check if it's a method call on a page object
+                        if isinstance(node.value, ast.Attribute):
+                            if hasattr(node.value, 'attr') and 'page' in node.value.attr.lower():
+                                used_methods.add(node.attr)
+                        elif isinstance(node.value, ast.Name):
+                            if 'page' in node.value.id.lower():
+                                used_methods.add(node.attr)
+
+                if used_methods:
+                    dependencies[page_class] = used_methods
+
+        except Exception as e:
+            print(f"⚠️ Error analyzing test dependencies in {test_file}: {e}")
+
+        return dependencies
+
+    def find_impacted_tests(self, changed_page: str, changed_methods: Set[str] = None) -> List[str]:
+        """Find tests impacted by changes in a page class."""
+        impacted_tests = []
+
+        for test_file in self.find_all_test_files():
+            dependencies = self.analyze_test_dependencies(test_file)
+
+            # Check if this test uses the changed page
+            page_name = changed_page.replace('_Page', '').replace('_page', '').replace('.py', '')
+
+            for imported_page, used_methods in dependencies.items():
+                if page_name.lower() in imported_page.lower():
+                    if changed_methods is None:
+                        # Entire page changed, include all tests using this page
+                        impacted_tests.append(str(test_file.relative_to(self.project_root)))
+                    else:
+                        # Check if any changed method is used by this test
+                        if changed_methods.intersection(used_methods):
+                            impacted_tests.append(str(test_file.relative_to(self.project_root)))
+
+        return impacted_tests
 
 
 class AITestSelector:
-    """Main class that orchestrates intelligent test selection."""
+    """Main AI-powered test selector."""
 
     def __init__(self, project_root: str = None):
         self.project_root = Path(project_root) if project_root else Path.cwd()
-        self.change_detector = ChangeDetector(project_root)
+        self.git_detector = GitChangeDetector(project_root)
+        self.impact_analyzer = TestImpactAnalyzer(self.project_root)
 
-    def get_tests_to_run(self) -> List[str]:
-        """Main method to determine which tests should be run based on changes."""
+    def select_tests(self) -> List[str]:
+        """Main method to select which tests should run."""
+        changed_files = self.git_detector.get_changed_files()
+
+        if not changed_files:
+            print("🚫 No changed files detected")
+            return []
+
         tests_to_run = []
 
-        # Scenario 1: Check for direct test file changes
-        staged_files, unstaged_files = self.change_detector.get_git_changes()
-        all_changed_files = list(set(staged_files + unstaged_files))
+        print(f"🔍 Analyzing {len(changed_files)} changed file(s):")
 
-        for changed_file in all_changed_files:
-            file_path = Path(changed_file)
+        for changed_file in changed_files:
+            print(f"  📝 {changed_file}")
 
-            # Scenario 1: If test file changed, run only that test
-            if file_path.name.startswith('test_') and file_path.suffix == '.py':
+            # Scenario 1: Direct test file changes
+            if changed_file.startswith('tests/') and changed_file.endswith('.py'):
                 tests_to_run.append(changed_file)
-                print(f"✅ Test file changed: {changed_file}")
+                print(f"    ✅ Test file changed → Run: {changed_file}")
                 continue
 
-            # Scenario 2 & 3: If page class changed, find impacted tests
-            if file_path.parent.name == 'pages' and file_path.suffix == '.py':
-                page_class = file_path.stem
-                print(f"🔍 Page class changed: {page_class}")
+            # Scenario 2 & 3: Page class changes
+            if changed_file.startswith('pages/') and changed_file.endswith('.py'):
+                page_name = Path(changed_file).stem
+                print(f"    🔍 Page class changed: {page_name}")
 
-                # Get specific methods that changed
-                changed_methods = self.change_detector.get_changed_methods(changed_file)
+                # Get specific changed methods
+                changed_methods = CodeAnalyzer.get_changed_methods(changed_file, self.project_root)
 
                 if changed_methods:
-                    print(f"📝 Changed methods: {', '.join(changed_methods)}")
-                    # Scenario 3: Run tests impacted by specific method changes
-                    dependent_tests = self.change_detector.find_test_dependencies(
-                        page_class, changed_methods)
+                    print(f"    📋 Changed methods: {', '.join(changed_methods)}")
+                    # Scenario 3: Method-level impact analysis
+                    impacted = self.impact_analyzer.find_impacted_tests(page_name, changed_methods)
                 else:
-                    print(f"📝 Entire page class affected")
-                    # Scenario 2: Run all tests using this page class
-                    dependent_tests = self.change_detector.find_test_dependencies(page_class)
+                    print(f"    📋 Entire page affected")
+                    # Scenario 2: Page-level impact analysis
+                    impacted = self.impact_analyzer.find_impacted_tests(page_name, None)
 
-                tests_to_run.extend(dependent_tests)
-                print(f"🎯 Impacted tests: {', '.join(dependent_tests) if dependent_tests else 'None'}")
+                tests_to_run.extend(impacted)
+                if impacted:
+                    print(f"    🎯 Impacted tests: {', '.join(impacted)}")
+                else:
+                    print(f"    ℹ️  No tests directly impacted")
 
         return list(set(tests_to_run))  # Remove duplicates
 
-    def run_selected_tests(self, test_files: List[str] = None, dry_run: bool = False) -> int:
-        """Run the selected test files using pytest."""
+    def run_tests(self, test_files: List[str] = None, dry_run: bool = False) -> int:
+        """Run the selected tests."""
         if test_files is None:
-            test_files = self.get_tests_to_run()
+            test_files = self.select_tests()
 
         if not test_files:
-            print("🚫 No tests to run based on current changes.")
+            print("\n🚫 No tests to run based on current changes")
             return 0
 
-        print(f"\n🚀 Running {len(test_files)} test file(s):")
-        for test_file in test_files:
-            print(f"  • {test_file}")
+        print(f"\n🚀 Selected {len(test_files)} test file(s):")
+        for test in test_files:
+            print(f"  • {test}")
 
         if dry_run:
-            print("\n🧪 DRY RUN - Tests would be executed with:")
-            pytest_cmd = ['pytest'] + test_files + ['-v']
-            print(f"  {' '.join(pytest_cmd)}")
+            print(f"\n🧪 DRY RUN - Would execute:")
+            print(f"  pytest {' '.join(test_files)} -v")
             return 0
 
         try:
-            # Run pytest with the selected test files
+            print(f"\n▶️  Running tests...")
             result = subprocess.run(['pytest'] + test_files + ['-v'],
                                     cwd=self.project_root)
             return result.returncode
-        except subprocess.CalledProcessError as e:
+        except Exception as e:
             print(f"❌ Error running tests: {e}")
             return 1
 
 
 def main():
-    """Command line interface for the AI Test Selector."""
-    import argparse
+    """Command line interface."""
+    parser = argparse.ArgumentParser(
+        description='AI-powered selective test runner',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python ai_test_selector.py                    # Run selected tests
+  python ai_test_selector.py --list-only       # Show which tests would run
+  python ai_test_selector.py --dry-run         # Show pytest command
+        """
+    )
 
-    parser = argparse.ArgumentParser(description='AI-powered selective test runner')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='Show which tests would be run without executing them')
-    parser.add_argument('--project-root', type=str, default=None,
-                        help='Root directory of the project (default: current directory)')
     parser.add_argument('--list-only', action='store_true',
-                        help='Only list the tests that would be run')
+                        help='Only show which tests would be selected')
+    parser.add_argument('--dry-run', action='store_true',
+                        help='Show pytest command without running it')
+    parser.add_argument('--project-root', type=str, default=None,
+                        help='Project root directory (default: current)')
 
     args = parser.parse_args()
 
     selector = AITestSelector(args.project_root)
 
     if args.list_only:
-        tests = selector.get_tests_to_run()
+        tests = selector.select_tests()
         if tests:
-            print("Tests to run:")
+            print(f"\n📋 Tests to run ({len(tests)}):")
             for test in tests:
                 print(f"  • {test}")
         else:
-            print("No tests to run based on current changes.")
+            print("\n🚫 No tests to run")
         return 0
 
-    return selector.run_selected_tests(dry_run=args.dry_run)
+    return selector.run_tests(dry_run=args.dry_run)
 
 
 if __name__ == '__main__':
