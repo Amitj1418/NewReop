@@ -1,130 +1,117 @@
 import os
 import re
+import sys
 import subprocess
 import logging
-from pathlib import Path
-from git import Repo
 from datetime import datetime
 
-# === Logging ===
-log_dir = Path("logs")
-log_dir.mkdir(exist_ok=True)
-log_file = log_dir / f"ai_test_selector_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-
+# === LOGGING SETUP ===
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, f"ai_test_selector_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
 logging.basicConfig(
     filename=log_file,
     level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    encoding="utf-8"
+    format="%(asctime)s [%(levelname)s] %(message)s"
 )
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+logging.getLogger().addHandler(console_handler)
 
 logging.info("=== AI Test Selector Started ===")
+logging.debug(f"sys.platform='{sys.platform}', git_executable='git'")
 
-project_root = Path(__file__).parent.resolve()
-repo = Repo(".")
 
-# === Step 1: Get changed lines ===
 def get_changed_lines():
+    """Get raw git diff for staged changes, or last commit if nothing staged."""
     try:
+        # First check for staged changes
         diff_output = subprocess.check_output(
-            ["git", "diff", "-U0", "HEAD~1", "HEAD"],
+            ["git", "diff", "--cached", "--unified=0", "HEAD"],
+            stderr=subprocess.STDOUT,
+            text=True,
             encoding="utf-8",
-            errors="replace"
+            errors="ignore"
         )
+
+        # If nothing staged, fallback to last commit
+        if not diff_output.strip():
+            logging.info("No staged changes found, checking last commit...")
+            diff_output = subprocess.check_output(
+                ["git", "diff", "HEAD~1", "HEAD", "--unified=0"],
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="ignore"
+            )
+
         logging.info("Fetched git diff successfully.")
         return diff_output
+
     except subprocess.CalledProcessError as e:
-        logging.error(f"Error getting git diff: {e}")
+        logging.error(f"Error running git diff: {e.output}")
         return ""
 
-diff_content = get_changed_lines()
-if not diff_content.strip():
-    logging.warning("No code changes detected.")
-    print("No code changes detected.")
-    exit()
 
-# === Step 2: Extract changed files & methods ===
-changed_files = re.findall(r"\+\+\+ b/(.+)", diff_content)
-changed_methods = set()
-changed_test_files = []
+def extract_changed_files_and_methods(diff_text):
+    changed_files = set()
+    changed_methods = set()
+    current_file = None
 
-for f in changed_files:
-    if f.startswith("tests/") and f.endswith(".py"):
-        changed_test_files.append(f)
+    method_pattern = re.compile(r"^\+.*def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(")
 
-changed_methods.update(re.findall(r"^\+\s*def\s+(\w+)", diff_content, re.MULTILINE))
+    for line in diff_text.splitlines():
+        if line.startswith("+++ b/"):
+            current_file = line[6:]
+            changed_files.add(current_file)
+        elif line.startswith("+") and current_file and current_file.endswith(".py"):
+            method_match = method_pattern.match(line)
+            if method_match:
+                changed_methods.add(method_match.group(1))
 
-logging.info(f"Changed files: {changed_files}")
-logging.info(f"Changed methods: {changed_methods}")
-logging.info(f"Changed test files: {changed_test_files}")
+    return changed_files, changed_methods
 
-# === Step 3: Get all test files ===
-all_test_files = []
-for root, _, files in os.walk("tests"):
-    for file in files:
-        if file.startswith("test") and file.endswith(".py"):
-            all_test_files.append(os.path.join(root, file))
 
-if not all_test_files:
-    logging.warning("No test files found.")
-    print("No test files found.")
-    exit()
+def find_impacted_tests(changed_files, changed_methods):
+    """Find relevant tests based on changes."""
+    impacted_tests = set()
 
-# === Step 4: Scenario Selection ===
-test_files_to_run = []
+    # Scenario 1: Direct test file changes
+    for f in changed_files:
+        if f.startswith("tests/") and f.endswith(".py"):
+            impacted_tests.add(f)
 
-# 1️⃣ If a test file itself changed, run it directly
-if changed_test_files:
-    logging.info("Detected direct changes in test files.")
-    test_files_to_run.extend(changed_test_files)
+    # Scenario 2 & 3: Page class method changes
+    if changed_methods:
+        for root, _, files in os.walk("tests"):
+            for file in files:
+                if file.endswith(".py"):
+                    test_path = os.path.join(root, file)
+                    try:
+                        with open(test_path, encoding="utf-8", errors="ignore") as tf:
+                            content = tf.read()
+                            for method in changed_methods:
+                                if re.search(rf"\b{method}\b", content):
+                                    impacted_tests.add(test_path)
+                    except Exception as e:
+                        logging.error(f"Error reading file {test_path}: {e}")
 
-# 2️⃣ If a page method changed, find impacted tests only
-elif changed_methods:
-    for test_file in all_test_files:
-        with open(test_file, "r", encoding="utf-8", errors="ignore") as f:
-            code = f.read()
-            for method in changed_methods:
-                if re.search(rf"\b{method}\s*\(", code):
-                    logging.info(f"Impacted test: {test_file} (uses {method}())")
-                    test_files_to_run.append(test_file)
+    return list(impacted_tests)
 
-# 3️⃣ AI fallback if nothing matched
-if not test_files_to_run:
-    logging.info("No direct matches found, falling back to AI mapping.")
-    prompt = (
-        "You are an AI that maps Python code changes to pytest test files.\n"
-        f"Changed files: {changed_files}\n"
-        f"Changed methods: {', '.join(changed_methods) if changed_methods else 'None'}\n"
-        "Return ONLY the pytest test file paths (starting with tests/) "
-        "that are most likely to be affected. One per line."
-    )
 
-    try:
-        ai_result = subprocess.run(
-            ["ollama", "run", "mistral"],
-            input=prompt.encode("utf-8"),
-            capture_output=True,
-            timeout=25
-        )
-        ai_output = ai_result.stdout.decode(errors="replace").strip()
-        logging.info(f"AI Output:\n{ai_output}")
+if __name__ == "__main__":
+    diff_content = get_changed_lines()
+    changed_files, changed_methods = extract_changed_files_and_methods(diff_content)
 
-        for line in ai_output.splitlines():
-            line = line.strip()
-            if line.endswith(".py"):
-                path = (project_root / line).resolve()
-                if path.exists():
-                    test_files_to_run.append(str(path.relative_to(project_root)))
-    except subprocess.TimeoutExpired:
-        logging.error("Ollama request timed out. Skipping AI step.")
+    logging.info(f"Changed files: {list(changed_files)}")
+    logging.info(f"Changed methods: {changed_methods}")
 
-# === Step 5: Run matched tests ===
-test_files_to_run = list(set(test_files_to_run))
-if not test_files_to_run:
-    logging.warning("No relevant test files found.")
-    print("No relevant test files found.")
-    exit()
+    impacted_tests = find_impacted_tests(changed_files, changed_methods)
 
-logging.info(f"Selected tests to run: {test_files_to_run}")
-print("Selected tests to run:\n", "\n".join(test_files_to_run))
-os.system(f"pytest {' '.join(test_files_to_run)}")
+    if impacted_tests:
+        logging.info(f"Selected tests to run: {impacted_tests}")
+        for test in impacted_tests:
+            print(test)
+    else:
+        logging.warning("No relevant test files found.")
