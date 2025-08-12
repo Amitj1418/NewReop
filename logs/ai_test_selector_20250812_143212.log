@@ -1,0 +1,8 @@
+2025-08-12 14:32:12,596 [INFO] === AI Test Selector Started ===
+2025-08-12 14:32:12,597 [DEBUG] sys.platform='win32', git_executable='git'
+2025-08-12 14:32:12,651 [INFO] Fetched git diff successfully.
+2025-08-12 14:32:12,652 [INFO] Changed files: ['ai_test_selector_3.py', 'pages/checkout_page.py']
+2025-08-12 14:32:12,652 [INFO] Changed elements: {'strip_comments_and_docstrings', 'page'}
+2025-08-12 14:32:12,654 [INFO] Matched method 'login_with_super_admin' in test file: tests\test_001_checkout.py
+2025-08-12 14:32:12,654 [INFO] Matched method 'login_with_super_admin' in test file: tests\test_002_validate_waning_message.py
+2025-08-12 14:32:12,655 [INFO] Selected tests to run: ['tests\\test_001_checkout.py', 'tests\\test_002_validate_waning_message.py']
