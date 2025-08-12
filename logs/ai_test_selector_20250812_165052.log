@@ -1,0 +1,11 @@
+2025-08-12 16:50:52,527 [INFO] === AI Test Selector Started ===
+2025-08-12 16:50:52,528 [DEBUG] sys.platform='win32', git_executable='git'
+2025-08-12 16:50:52,591 [INFO] Changed files: ['pages/checkout_page.py']
+2025-08-12 16:50:52,643 [INFO] Changed methods: set()
+2025-08-12 16:50:52,643 [INFO] Changed test files: []
+2025-08-12 16:50:52,643 [INFO] No direct matches found, falling back to AI mapping.
+2025-08-12 16:51:18,570 [INFO] Ollama AI Output:
+tests/checkout_page_test.py
+tests/cart_test.py
+tests/order_flow_test.py
+2025-08-12 16:51:18,573 [WARNING] No relevant test files found.
