@@ -39,7 +39,7 @@ def get_changed_files():
 changed_files = get_changed_files()
 logging.info(f"Changed files: {changed_files}")
 
-# === Step 2: Detect changed methods in Python files ===
+# === Step 2: Detect changed methods ===
 def get_changed_methods():
     try:
         diff_output = subprocess.check_output(
@@ -55,19 +55,18 @@ def get_changed_methods():
 changed_methods = get_changed_methods()
 logging.info(f"Changed methods: {changed_methods}")
 
-# === Step 3: Check if any changed files are tests ===
+# === Step 3: Changed test files ===
 changed_test_files = [
     f for f in changed_files if f.startswith("tests/") and f.endswith(".py")
 ]
 logging.info(f"Changed test files: {changed_test_files}")
 
-# === Step 4: If test files changed → run them directly ===
 if changed_test_files:
     logging.info("Running directly changed test files.")
     os.system(f"pytest {' '.join(changed_test_files)}")
     exit()
 
-# === Step 5: If methods changed → find impacted tests ===
+# === Step 4: Match methods to test files ===
 test_files_to_run = []
 
 if changed_methods:
@@ -89,7 +88,7 @@ if changed_methods:
         except Exception as e:
             logging.error(f"Error reading {test_file}: {e}")
 
-# === Step 6: AI Fallback with Ollama ===
+# === Step 5: AI fallback with Ollama ===
 if not test_files_to_run and changed_files:
     logging.info("No direct matches found, falling back to AI mapping.")
 
@@ -120,16 +119,33 @@ if not test_files_to_run and changed_files:
         ai_output = ai_response.get("response", "").strip()
         logging.info(f"Ollama AI Output:\n{ai_output}")
 
+        # Clean and fuzzy match AI output
+        all_tests = []
+        for root, _, files in os.walk("tests"):
+            for f in files:
+                if f.endswith(".py"):
+                    all_tests.append(os.path.join(root, f))
+
         for line in ai_output.splitlines():
-            line = line.strip()
-            if line.endswith(".py") and line.startswith("tests/") and os.path.exists(line):
+            line = line.strip().split()[0]  # Remove extra text
+            if not line.endswith(".py"):
+                continue
+            if os.path.exists(line):
                 test_files_to_run.append(line)
+            else:
+                # Fuzzy match by filename
+                fname = os.path.basename(line)
+                for real_test in all_tests:
+                    if real_test.endswith(fname):
+                        test_files_to_run.append(real_test)
+                        break
+
     except subprocess.TimeoutExpired:
         logging.error("Ollama request timed out. Skipping AI step.")
     except Exception as e:
         logging.error(f"Ollama AI request failed: {e}")
 
-# === Step 7: Run selected tests ===
+# === Step 6: Run selected tests ===
 test_files_to_run = list(set(test_files_to_run))
 if not test_files_to_run:
     logging.warning("No relevant test files found.")

@@ -54,8 +54,8 @@ class CheckoutPage:
     def assert_toast_contains(self, expected_text: str):
         """Waits for toast and asserts it contains expected text."""
         actual = self.page.locator(self.TOAST_MESSAGE)
-        actual_text2 = actual.inner_text()
-        assert expected_text in actual_text2, f"❌ Toast did not match. Expected: '{expected_text}' | Actual: '{actual_text2}'"
+        actual_text = actual.inner_text()
+        assert expected_text in actual_text, f"❌ Toast did not match. Expected: '{expected_text}' | Actual: '{actual_text}'"
 
     def wait_for_locator(self, selector: str, timeout: int = 10000):
         """Waits for the given locator to be visible within the timeout."""
