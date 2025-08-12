@@ -1,117 +1,130 @@
 import os
 import re
-import sys
-import logging
 import subprocess
+import logging
 from pathlib import Path
-import requests
+from git import Repo
 from datetime import datetime
 
-# === Logging setup ===
+# === Logging ===
 log_dir = Path("logs")
 log_dir.mkdir(exist_ok=True)
 log_file = log_dir / f"ai_test_selector_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 
 logging.basicConfig(
+    filename=log_file,
     level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.FileHandler(log_file, encoding="utf-8"), logging.StreamHandler(sys.stdout)]
+    encoding="utf-8"
 )
 
 logging.info("=== AI Test Selector Started ===")
-logging.debug(f"sys.platform='{sys.platform}', git_executable='git'")
 
-# === Git diff retrieval ===
+project_root = Path(__file__).parent.resolve()
+repo = Repo(".")
+
+# === Step 1: Get changed lines ===
 def get_changed_lines():
     try:
         diff_output = subprocess.check_output(
-            ["git", "diff", "--cached", "--unified=0", "HEAD"],
-            stderr=subprocess.STDOUT,
-            text=True,
+            ["git", "diff", "-U0", "HEAD~1", "HEAD"],
             encoding="utf-8",
-            errors="ignore"
+            errors="replace"
         )
         logging.info("Fetched git diff successfully.")
         return diff_output
     except subprocess.CalledProcessError as e:
-        logging.error(f"Error running git diff: {e.output}")
+        logging.error(f"Error getting git diff: {e}")
         return ""
 
 diff_content = get_changed_lines()
+if not diff_content.strip():
+    logging.warning("No code changes detected.")
+    print("No code changes detected.")
+    exit()
 
-# === Step 1: Filter changed files (ignore logs) ===
-changed_files = [
-    f for f in re.findall(r"\+\+\+ b/(.+)", diff_content)
-    if not f.startswith("logs/") and f.endswith(".py")
-]
-logging.info(f"Changed files: {changed_files}")
-
-# === Step 2: Identify changed test files & methods ===
-changed_test_files = []
+# === Step 2: Extract changed files & methods ===
+changed_files = re.findall(r"\+\+\+ b/(.+)", diff_content)
 changed_methods = set()
-project_root = Path(__file__).parent
+changed_test_files = []
 
 for f in changed_files:
-    if f.startswith("tests/"):
+    if f.startswith("tests/") and f.endswith(".py"):
         changed_test_files.append(f)
-    elif f.startswith("pages/"):
-        try:
-            file_path = project_root / f
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as src:
-                content = src.read()
-                methods = re.findall(r"^\s*def\s+(\w+)", content, re.MULTILINE)
-                changed_methods.update(methods)
-        except FileNotFoundError:
-            logging.warning(f"File not found for method scan: {f}")
 
+changed_methods.update(re.findall(r"^\+\s*def\s+(\w+)", diff_content, re.MULTILINE))
+
+logging.info(f"Changed files: {changed_files}")
 logging.info(f"Changed methods: {changed_methods}")
 logging.info(f"Changed test files: {changed_test_files}")
 
-# === Step 3: Map changed methods to tests ===
-selected_tests = set(changed_test_files)
+# === Step 3: Get all test files ===
+all_test_files = []
+for root, _, files in os.walk("tests"):
+    for file in files:
+        if file.startswith("test") and file.endswith(".py"):
+            all_test_files.append(os.path.join(root, file))
 
-if changed_methods:
-    tests_dir = project_root / "tests"
-    for test_file in tests_dir.glob("test_*.py"):
-        try:
-            content = test_file.read_text(encoding="utf-8", errors="ignore")
+if not all_test_files:
+    logging.warning("No test files found.")
+    print("No test files found.")
+    exit()
+
+# === Step 4: Scenario Selection ===
+test_files_to_run = []
+
+# 1️⃣ If a test file itself changed, run it directly
+if changed_test_files:
+    logging.info("Detected direct changes in test files.")
+    test_files_to_run.extend(changed_test_files)
+
+# 2️⃣ If a page method changed, find impacted tests only
+elif changed_methods:
+    for test_file in all_test_files:
+        with open(test_file, "r", encoding="utf-8", errors="ignore") as f:
+            code = f.read()
             for method in changed_methods:
-                if re.search(rf"\b{method}\b", content):
-                    logging.info(f"Matched method '{method}' in test file: {test_file}")
-                    selected_tests.add(str(test_file))
-        except Exception as e:
-            logging.error(f"Error reading test file {test_file}: {e}")
+                if re.search(rf"\b{method}\s*\(", code):
+                    logging.info(f"Impacted test: {test_file} (uses {method}())")
+                    test_files_to_run.append(test_file)
 
-# === Step 4: Fallback to AI (Ollama) if nothing found ===
-if not selected_tests and changed_files:
+# 3️⃣ AI fallback if nothing matched
+if not test_files_to_run:
     logging.info("No direct matches found, falling back to AI mapping.")
+    prompt = (
+        "You are an AI that maps Python code changes to pytest test files.\n"
+        f"Changed files: {changed_files}\n"
+        f"Changed methods: {', '.join(changed_methods) if changed_methods else 'None'}\n"
+        "Return ONLY the pytest test file paths (starting with tests/) "
+        "that are most likely to be affected. One per line."
+    )
+
     try:
-        prompt = (
-            "Given the changed files:\n" + "\n".join(changed_files) +
-            "\nSuggest relevant pytest test files from 'tests/' directory to run."
-        )
-        resp = requests.post(
-            "http://localhost:11434/api/generate",
-            json={"model": "mistral", "prompt": prompt, "stream": False},
+        ai_result = subprocess.run(
+            ["ollama", "run", "mistral"],
+            input=prompt.encode("utf-8"),
+            capture_output=True,
             timeout=25
         )
-        if resp.status_code == 200:
-            ai_output = resp.json().get("response", "")
-            logging.debug(f"Ollama AI output: {ai_output}")
-            for match in re.findall(r"tests[\\/][\w_]+\.py", ai_output):
-                if os.path.exists(match):
-                    selected_tests.add(match)
-        else:
-            logging.error(f"Ollama request failed: {resp.status_code}")
-    except requests.exceptions.Timeout:
-        logging.error("Ollama request timed out. Skipping AI step.")
-    except Exception as e:
-        logging.error(f"Ollama request failed: {e}")
+        ai_output = ai_result.stdout.decode(errors="replace").strip()
+        logging.info(f"AI Output:\n{ai_output}")
 
-# === Step 5: Run pytest or exit ===
-if selected_tests:
-    logging.info(f"Selected tests to run: {list(selected_tests)}")
-    test_args = ["pytest"] + list(selected_tests)
-    subprocess.run(test_args)
-else:
+        for line in ai_output.splitlines():
+            line = line.strip()
+            if line.endswith(".py"):
+                path = (project_root / line).resolve()
+                if path.exists():
+                    test_files_to_run.append(str(path.relative_to(project_root)))
+    except subprocess.TimeoutExpired:
+        logging.error("Ollama request timed out. Skipping AI step.")
+
+# === Step 5: Run matched tests ===
+test_files_to_run = list(set(test_files_to_run))
+if not test_files_to_run:
     logging.warning("No relevant test files found.")
+    print("No relevant test files found.")
+    exit()
+
+logging.info(f"Selected tests to run: {test_files_to_run}")
+print("Selected tests to run:\n", "\n".join(test_files_to_run))
+os.system(f"pytest {' '.join(test_files_to_run)}")
