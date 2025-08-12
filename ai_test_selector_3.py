@@ -62,18 +62,20 @@ class ChangeDetector:
 
         try:
             # Get the diff for the specific file
-            result = subprocess.run(['git', 'diff', '--unified=0', file_path],
+            result = subprocess.run(['git', 'diff', '--unified=3', file_path],
                                     capture_output=True, text=True, cwd=self.project_root)
             diff_output = result.stdout
 
             if not diff_output:
                 # Try staged changes
-                result = subprocess.run(['git', 'diff', '--cached', '--unified=0', file_path],
+                result = subprocess.run(['git', 'diff', '--cached', '--unified=3', file_path],
                                         capture_output=True, text=True, cwd=self.project_root)
                 diff_output = result.stdout
 
             # Parse diff to find changed line numbers
             changed_lines = set()
+            current_start = 0
+
             for line in diff_output.split('\n'):
                 if line.startswith('@@'):
                     # Extract line numbers from @@ -old_start,old_count +new_start,new_count @@
@@ -81,17 +83,45 @@ class ChangeDetector:
                     if len(parts) >= 3:
                         new_part = parts[2]  # +new_start,new_count
                         if ',' in new_part:
-                            start_line = int(new_part[1:].split(',')[0])
-                            count = int(new_part.split(',')[1])
-                            changed_lines.update(range(start_line, start_line + count))
+                            current_start = int(new_part[1:].split(',')[0])
                         else:
-                            changed_lines.add(int(new_part[1:]))
+                            current_start = int(new_part[1:])
+                elif line.startswith('+') and not line.startswith('+++'):
+                    # This is an added line
+                    changed_lines.add(current_start)
+                    current_start += 1
+                elif line.startswith('-') and not line.startswith('---'):
+                    # This is a removed line, don't increment current_start
+                    changed_lines.add(current_start)
+                elif not line.startswith('-'):
+                    # Context line or unchanged line
+                    current_start += 1
 
-            # Map changed lines to methods
+            # Map changed lines to methods with better range detection
             file_methods = self.extract_methods_from_file(Path(file_path))
-            for method, line_no in file_methods.items():
-                if line_no in changed_lines:
-                    changed_methods.add(method)
+
+            # Get method ranges (start to next method or end of file)
+            with open(Path(file_path), 'r', encoding='utf-8') as f:
+                total_lines = len(f.readlines())
+
+            method_ranges = {}
+            sorted_methods = sorted(file_methods.items(), key=lambda x: x[1])
+
+            for i, (method_name, start_line) in enumerate(sorted_methods):
+                if i < len(sorted_methods) - 1:
+                    end_line = sorted_methods[i + 1][1] - 1
+                else:
+                    end_line = total_lines
+                method_ranges[method_name] = (start_line, end_line)
+
+            # Check which methods contain changed lines
+            for method_name, (start, end) in method_ranges.items():
+                if any(start <= line <= end for line in changed_lines):
+                    # Extract just the method name without class prefix
+                    if '.' in method_name:
+                        changed_methods.add(method_name.split('.', 1)[1])
+                    else:
+                        changed_methods.add(method_name)
 
         except Exception as e:
             print(f"Error analyzing changes in {file_path}: {e}")
