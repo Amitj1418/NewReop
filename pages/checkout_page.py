@@ -50,10 +50,12 @@ class CheckoutPage:
 
     def validate_dashboard_page(self):
         self.wait_for_locator(self.USERNAME_LABEL)
+        self.wait_for_locator(self.USERNAME_LABEL)
 
 
     def assert_toast_contains(self, expected_text: str):
         """Waits for toast and asserts it contains expected text."""
+        self.wait_for_locator(self.TOAST_MESSAGE)
         self.wait_for_locator(self.TOAST_MESSAGE)
         actual = self.page.locator(self.TOAST_MESSAGE)
         actual_text = actual.inner_text()
