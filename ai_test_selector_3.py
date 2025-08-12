@@ -40,15 +40,37 @@ def get_changed_files():
 
 
 def get_changed_methods(changed_files):
+    """
+    Detects changed methods by scanning diffs for any added/modified lines
+    inside a function, not just when the 'def' line changes.
+    """
     changed_methods = set()
+
     for file_path in changed_files:
         if not file_path.endswith(".py"):
             continue
+
         diff_output = run_git_cmd(["git", "diff", "HEAD~1", "--", file_path])
         if not diff_output:
             continue
-        for match in re.finditer(r'^\+.*def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', diff_output, re.MULTILINE):
-            changed_methods.add(match.group(1))
+
+        current_method = None
+
+        for line in diff_output.splitlines():
+            # Look for method definitions in added/context/removed lines
+            def_match = re.match(r'^[\+\s-]*def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', line)
+            if def_match:
+                current_method = def_match.group(1)
+                continue
+
+            # If an added or modified line is inside a tracked method
+            if line.startswith(('+', '-')) and not line.startswith(('+++', '---')) and current_method:
+                changed_methods.add(current_method)
+
+            # End tracking if we hit a non-indented code block (simple heuristic)
+            if line and not line.startswith((' ', '+', '-')):
+                current_method = None
+
     logging.info(f"Changed methods detected: {changed_methods}")
     return changed_methods
 
