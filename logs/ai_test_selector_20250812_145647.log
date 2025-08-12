@@ -1,0 +1,9 @@
+2025-08-12 14:56:47,771 [INFO] === AI Test Selector Started ===
+2025-08-12 14:56:47,771 [DEBUG] sys.platform='win32', git_executable='git'
+2025-08-12 14:56:47,828 [INFO] Fetched git diff successfully.
+2025-08-12 14:56:47,829 [INFO] Changed files: ['ai_test_selector_3.py', 'pages/checkout_page.py']
+2025-08-12 14:56:47,829 [INFO] Changed methods: set()
+2025-08-12 14:56:47,829 [INFO] Changed test files: []
+2025-08-12 14:56:47,829 [INFO] No direct matches found, falling back to AI mapping.
+2025-08-12 14:57:12,874 [ERROR] Ollama request timed out. Skipping AI step.
+2025-08-12 14:57:12,875 [WARNING] No relevant test files found.
