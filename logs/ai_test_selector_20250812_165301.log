@@ -1,6 +1,0 @@
-2025-08-12 16:53:01,206 [INFO] === AI Test Selector Started ===
-2025-08-12 16:53:01,206 [DEBUG] sys.platform='win32', git_executable='git'
-2025-08-12 16:53:01,259 [INFO] Changed files: ['tests/test_002_validate_waning_message.py']
-2025-08-12 16:53:01,316 [INFO] Changed methods: set()
-2025-08-12 16:53:01,316 [INFO] Changed test files: ['tests/test_002_validate_waning_message.py']
-2025-08-12 16:53:01,316 [INFO] Running directly changed test files.

@@ -1,6 +1,0 @@
-2025-08-12 16:49:55,594 [INFO] === AI Test Selector Started ===
-2025-08-12 16:49:55,595 [DEBUG] sys.platform='win32', git_executable='git'
-2025-08-12 16:49:55,654 [INFO] Changed files: ['tests/test_001_checkout.py']
-2025-08-12 16:49:55,715 [INFO] Changed methods: set()
-2025-08-12 16:49:55,715 [INFO] Changed test files: ['tests/test_001_checkout.py']
-2025-08-12 16:49:55,715 [INFO] Running directly changed test files.
