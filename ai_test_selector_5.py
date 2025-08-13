@@ -2,157 +2,236 @@ import os
 import re
 import subprocess
 import logging
-from pathlib import Path
+import requests
+import json
+from difflib import get_close_matches
+from logging.handlers import RotatingFileHandler
+
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+
+file_handler = RotatingFileHandler(
+    os.path.join(LOG_DIR, "ai_test_selector.log"),
+    maxBytes=1_000_000,
+    backupCount=5,
+    encoding="utf-8"
+)
+console_handler = logging.StreamHandler()
+
+log_format = logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+file_handler.setFormatter(log_format)
+console_handler.setFormatter(log_format)
 
 logging.basicConfig(
-    filename="logs/ai_test_selector.log",
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
+    handlers=[file_handler, console_handler]
 )
 
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL = "mistral"
+
+# -----------------------------
+# Git helpers
+# -----------------------------
 def run_git_cmd(cmd):
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    result.check_returncode()
-    return result.stdout.strip()
+    try:
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=True
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Git command failed: {e.stderr}")
+        return ""
+
 
 def get_changed_files():
-    changed_files = run_git_cmd(["git", "diff", "--name-only", "HEAD~1", "HEAD"]).split("\n")
-    return [f.strip() for f in changed_files if f.strip()]
+    result = run_git_cmd(["git", "diff", "--name-only", "HEAD~1"])
+    changed_files = [f.strip() for f in result.split("\n") if f.strip()]
+    logging.info(f"Changed files: {changed_files}")
+    return changed_files
 
-def get_diff_for_file(file_path):
-    return run_git_cmd(["git", "diff", "HEAD~1", "HEAD", "--", file_path])
 
-def get_changed_methods(diff_text):
-    method_pattern = re.compile(r"^\+.*def\s+(\w+)\s*\(", re.MULTILINE)
-    return set(method_pattern.findall(diff_text))
+def get_changed_methods(changed_files):
+    changed_methods = set()
+    for file_path in changed_files:
+        if not file_path.endswith(".py"):
+            continue
 
-def get_changed_locators():
+        diff_output = run_git_cmd(["git", "diff", "HEAD~1", "--", file_path])
+        if not diff_output:
+            continue
+
+        current_method = None
+        for line in diff_output.splitlines():
+            def_match = re.match(r'^[\+\s-]*def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', line)
+            if def_match:
+                current_method = def_match.group(1)
+                continue
+
+            if line.startswith(('+', '-')) and not line.startswith(('+++', '---')) and current_method:
+                changed_methods.add(current_method)
+
+            if line and not line.startswith((' ', '+', '-')):
+                current_method = None
+
+    logging.info(f"Changed methods detected: {changed_methods}")
+    return changed_methods
+
+# -----------------------------
+# Locator helpers
+# -----------------------------
+def get_changed_locators(changed_files):
     changed_locators = set()
-    diff_output = run_git_cmd(["git", "diff", "HEAD~1", "HEAD", "--", "pages/"])
-    locator_pattern = re.compile(r"^\+\s*(\w+_LOCATOR)\s*=\s*[\"'](.+)[\"']")
-    value_pattern = re.compile(r"[\"'](.+)[\"']")
-    current_locator_var = None
-
-    for line in diff_output.splitlines():
-        if line.startswith("+++ ") or line.startswith("--- "):
-            current_locator_var = None
+    for file_path in changed_files:
+        if not file_path.endswith(".py"):
             continue
 
-        match_var = locator_pattern.search(line)
-        if match_var:
-            locator_var = match_var.group(1)
-            changed_locators.add(locator_var)
-            current_locator_var = locator_var
+        diff_output = run_git_cmd(["git", "diff", "HEAD~1", "--", file_path])
+        if not diff_output:
             continue
 
-        if (line.startswith("+") or line.startswith("-")) and current_locator_var:
-            match_val = value_pattern.search(line)
-            if match_val:
-                changed_locators.add(current_locator_var)
+        for line in diff_output.splitlines():
+            locator_match = re.match(r'^[\+\-]\s*([A-Z_0-9]+_LOCATOR)\s*=', line)
+            if locator_match:
+                changed_locators.add(locator_match.group(1))
 
+    logging.info(f"Changed locators detected: {changed_locators}")
     return changed_locators
 
-def get_changed_variables(diff_text):
-    var_pattern = re.compile(r"^\+.*([a-z_]+)\s*=", re.MULTILINE)
-    return set(var_pattern.findall(diff_text))
 
-def find_tests_using_methods(methods):
-    tests = []
-    for test_file in Path("tests").rglob("test_*.py"):
-        with open(test_file, encoding="utf-8") as f:
-            content = f.read()
-        if any(m in content for m in methods):
-            tests.append(str(test_file))
-    return tests
-
-def find_tests_using_locators(locators):
-    tests = []
-    search_targets = list(locators)
-    for file_path in Path("tests").rglob("*.py"):
-        with open(file_path, encoding="utf-8") as f:
-            content = f.read()
-        if any(locator in content for locator in search_targets):
-            tests.append(str(file_path))
-    return tests
-
-def get_changed_test_methods(diff_text, file_path):
-    """
-    Detects added or removed test methods from test files.
-    Returns pytest node IDs (file_path::test_method).
-    """
-    added_tests = re.findall(r"^\+\s*def\s+(test_\w+)", diff_text, re.MULTILINE)
-    removed_tests = re.findall(r"^\-\s*def\s+(test_\w+)", diff_text, re.MULTILINE)
-
-    impacted_tests = []
-    for test in added_tests + removed_tests:
-        impacted_tests.append(f"{file_path}::{test}")
-
-    return impacted_tests
-
-def ask_ollama_for_tests(changed_files):
-    prompt = f"""
-    You are analyzing a Python Playwright test framework.
-    The following files changed: {changed_files}
-    Suggest relevant pytest test files to run from the 'tests/' directory.
-    Only return a Python list of file paths.
-    """
-    import requests
+def map_locators_to_methods(file_path, changed_locators):
+    impacted_methods = set()
+    current_method = None
     try:
-        r = requests.post(
-            "http://localhost:11434/api/generate",
-            json={"model": "mistral", "prompt": prompt, "stream": False}
-        )
-        data = r.json()
-        return eval(data["response"]) if "response" in data else []
+        with open(file_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                method_match = re.match(r'^\s*def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', line)
+                if method_match:
+                    current_method = method_match.group(1)
+                    continue
+
+                if current_method and any(locator in line for locator in changed_locators):
+                    impacted_methods.add(current_method)
     except Exception as e:
-        logging.error(f"AI fallback failed: {e}")
+        logging.error(f"Error reading {file_path}: {e}")
+
+    return impacted_methods
+
+# -----------------------------
+# Test file helpers
+# -----------------------------
+def get_all_test_files():
+    all_tests = []
+    for root, _, files in os.walk("tests"):
+        for file in files:
+            if file.startswith("test_") and file.endswith(".py"):
+                all_tests.append(os.path.join(root, file).replace("\\", "/"))
+    return all_tests
+
+
+def find_tests_using_methods(test_files, changed_methods):
+    matched_tests = []
+    patterns = [
+        re.compile(rf'\b{method}\s*\(') for method in changed_methods
+    ] + [
+        re.compile(rf'\.\s*{method}\s*\(') for method in changed_methods
+    ]
+    for test_file in test_files:
+        try:
+            with open(test_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            if any(p.search(content) for p in patterns):
+                matched_tests.append(test_file)
+        except Exception as e:
+            logging.error(f"Error reading {test_file}: {e}")
+    return matched_tests
+
+# -----------------------------
+# AI fallback
+# -----------------------------
+def ask_ollama_for_tests(changed_files, changed_methods, repo_tests):
+    prompt = f"""
+You are an AI test file selector.
+You must ONLY choose from the provided list of real test files in the repo.
+
+Changed files:
+{json.dumps(changed_files)}
+
+Changed methods:
+{json.dumps(list(changed_methods))}
+
+Available test files in the repo:
+{json.dumps(repo_tests)}
+
+Return ONLY the paths from the list of available test files that are most likely impacted.
+Return one file per line, nothing else.
+"""
+    response = requests.post(OLLAMA_URL, json={"model": MODEL, "prompt": prompt, "stream": False})
+    try:
+        output = response.json().get("response", "")
+        return [line.strip() for line in output.splitlines() if line.strip()]
+    except Exception as e:
+        logging.error(f"Error parsing Ollama output: {e}")
         return []
 
-def main():
-    logging.info("=== AI Test Selector Started ===")
-    changed_files = [f for f in get_changed_files() if "ai_test_selector" not in f]
-    logging.info(f"Changed files: {changed_files}")
 
-    all_changed_methods = set()
-    all_changed_locators = set()
-    all_changed_vars = set()
-    all_changed_test_nodes = set()
-
-    for f in changed_files:
-        diff_text = get_diff_for_file(f)
-
-        if f.startswith("tests/") and f.endswith(".py"):
-            all_changed_test_nodes |= set(get_changed_test_methods(diff_text, f))
+def map_ai_files_to_repo(ai_files, repo_tests):
+    mapped_files = []
+    for ai_file in ai_files:
+        if ai_file in repo_tests:
+            mapped_files.append(ai_file)
         else:
-            all_changed_methods |= get_changed_methods(diff_text)
-            all_changed_locators |= get_changed_locators()
-            all_changed_vars |= get_changed_variables(diff_text)
+            matches = get_close_matches(ai_file, repo_tests, n=1, cutoff=0.5)
+            if matches:
+                mapped_files.append(matches[0])
+    return list(set(mapped_files))
 
-    # Case 1: Directly modified test methods
-    if all_changed_test_nodes:
-        logging.info(f"Detected changed/added/removed test methods: {all_changed_test_nodes}")
-        os.system(f"pytest {' '.join(all_changed_test_nodes)}")
-        return
-
-    # Case 2: Locator/method based impact analysis
-    impacted_tests = set()
-    if all_changed_methods:
-        impacted_tests |= set(find_tests_using_methods(all_changed_methods))
-    if all_changed_locators:
-        impacted_tests |= set(find_tests_using_locators(all_changed_locators))
-
-    # Case 3: Fallback AI
-    if not impacted_tests:
-        logging.info("No direct matches found — using AI fallback")
-        impacted_tests |= set(ask_ollama_for_tests(changed_files))
-
-    impacted_tests = sorted(impacted_tests)
-    logging.info(f"Running impacted tests: {impacted_tests}")
-
-    if impacted_tests:
-        os.system(f"pytest {' '.join(impacted_tests)}")
-    else:
-        logging.info("No impacted tests detected")
-
+# -----------------------------
+# Main
+# -----------------------------
 if __name__ == "__main__":
-    main()
+    logging.info("=== AI Test Selector Started ===")
+    changed_files = get_changed_files()
+    changed_methods = get_changed_methods(changed_files)
+
+    # Detect locator changes and map to methods
+    changed_locators = get_changed_locators(changed_files)
+    for file_path in changed_files:
+        if changed_locators and file_path.endswith(".py"):
+            locator_methods = map_locators_to_methods(file_path, changed_locators)
+            changed_methods.update(locator_methods)
+
+    repo_tests = get_all_test_files()
+
+    # Step 1 — Direct match by changed test file
+    changed_test_files = [f for f in changed_files if f in repo_tests]
+    if changed_test_files:
+        logging.info(f"Running directly changed test files: {changed_test_files}")
+        os.system(f"pytest {' '.join(changed_test_files)}")
+        exit(0)
+
+    # Step 2 — Match tests by method usage
+    method_matched_tests = find_tests_using_methods(repo_tests, changed_methods)
+    if method_matched_tests:
+        logging.info(f"Running tests that reference changed methods: {method_matched_tests}")
+        os.system(f"pytest {' '.join(method_matched_tests)}")
+        exit(0)
+
+    # Step 3 — Fallback to AI
+    ai_suggested = ask_ollama_for_tests(changed_files, changed_methods, repo_tests)
+    mapped_tests = map_ai_files_to_repo(ai_suggested, repo_tests)
+
+    if mapped_tests:
+        logging.info(f"Running AI-selected test files: {mapped_tests}")
+        os.system(f"pytest {' '.join(mapped_tests)}")
+    else:
+        logging.warning("No relevant test files found.")
