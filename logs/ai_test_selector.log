@@ -36,3 +36,22 @@
 2025-08-13 15:45:07 [INFO] Impacted Features: Checkout Process, User Authentication (Hospital User and Super Admin)
 2025-08-13 15:45:07 [INFO] Suggested Tests: test_001_validate_username_password.py, test_002_validate_waning_message.py, test_login.py, test_dashboard_page.py
 2025-08-13 15:45:07 [INFO] Running tests that reference changed methods: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-13 15:55:45 [INFO] === AI Test Selector Started ===
+2025-08-13 15:55:45 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 15:55:45 [INFO] Changed methods detected: set()
+2025-08-13 15:55:45 [INFO] Changed locators detected: {'//div[@class='}
+2025-08-13 15:55:47 [INFO] Dependency map: {}
+2025-08-13 15:56:44 [ERROR] Error parsing feature report: Expecting value: line 1 column 2 (char 1)
+2025-08-13 15:57:18 [INFO] Running AI-selected test files: ['tests/test_001_validate_username_password.py', 'tests/test_login.py']
+2025-08-13 16:02:30 [INFO] === AI Test Selector Started ===
+2025-08-13 16:02:30 [INFO] Changed files: ['ai_test_selector_4.py', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 16:02:30 [INFO] Changed methods detected: set()
+2025-08-13 16:03:46 [INFO] === AI Test Selector Started ===
+2025-08-13 16:03:46 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 16:03:46 [INFO] Changed methods detected: set()
+2025-08-13 16:03:47 [INFO] Changed locators detected: {'//div[@class='}
+2025-08-13 16:03:48 [INFO] Dependency map: {}
+2025-08-13 16:04:20 [INFO] === Impact Analysis Report ===
+2025-08-13 16:04:20 [INFO] Impacted Features: Checkout Process, AI Test Selection
+2025-08-13 16:04:20 [INFO] Suggested Tests: test_checkout_page.py, test_ai_test_selector.py
+2025-08-13 16:04:57 [INFO] Running AI-selected test files: ['tests/test_002_validate_waning_message.py', 'tests/test_login.py']
