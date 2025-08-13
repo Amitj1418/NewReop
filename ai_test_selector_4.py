@@ -2,11 +2,38 @@ import os
 import re
 import subprocess
 import logging
+from logging.handlers import RotatingFileHandler
+
 import requests
 import json
 from difflib import get_close_matches
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+# logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
+
+file_handler = RotatingFileHandler(
+    os.path.join(LOG_DIR, "ai_test_selector.log"),
+    maxBytes=1_000_000,
+    backupCount=5,
+    encoding="utf-8"
+)
+
+console_handler = logging.StreamHandler()
+
+log_format = logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+
+file_handler.setFormatter(log_format)
+console_handler.setFormatter(log_format)
+
+logging.basicConfig(
+    level=logging.INFO,
+    handlers=[file_handler, console_handler]
+)
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL = "mistral"
