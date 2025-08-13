@@ -15,3 +15,12 @@
 2025-08-13 14:45:46 [INFO] Impacted Features: Checkout Process, AI Test Feature Selection
 2025-08-13 14:45:46 [INFO] Suggested Tests: test_checkout_page.py, test_ai_test_selector.py
 2025-08-13 14:46:39 [INFO] Running AI-selected test files: ['tests/test_login.py']
+2025-08-13 14:47:25 [INFO] === AI Test Selector Started ===
+2025-08-13 14:47:26 [INFO] Changed files: ['logs/ai_test_selector.log', 'tests/test_002_validate_waning_message.py']
+2025-08-13 14:47:26 [INFO] Changed methods detected: {'test_super_admin_warning_message'}
+2025-08-13 14:47:26 [INFO] Changed locators detected: set()
+2025-08-13 14:47:27 [INFO] Dependency map: {'test_super_admin_warning_message': ['./tests/test_002_validate_waning_message.py']}
+2025-08-13 14:47:58 [INFO] === Impact Analysis Report ===
+2025-08-13 14:47:58 [INFO] Impacted Features: AI Test Feature, Super Admin Warning Message
+2025-08-13 14:47:58 [INFO] Suggested Tests: test_ai_test_feature.py, test_super_admin_warning_message.py
+2025-08-13 14:47:58 [INFO] Running directly changed test files: ['tests/test_002_validate_waning_message.py']
