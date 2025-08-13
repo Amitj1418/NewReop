@@ -1,35 +1,10 @@
-2025-08-13 14:34:14 [INFO] === AI Test Selector Started ===
-2025-08-13 14:34:15 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
-2025-08-13 14:34:21 [INFO] Changed methods detected: set()
-2025-08-13 14:34:32 [INFO] Dependency map: {}
-2025-08-13 14:35:08 [INFO] === Impact Analysis Report ===
-2025-08-13 14:35:08 [INFO] Impacted Features: Checkout Process, AI Test Selection
-2025-08-13 14:35:08 [INFO] Suggested Tests: test_checkout_page.py, test_ai_test_selector.py
-2025-08-13 14:36:41 [WARNING] No relevant test files found.
-2025-08-13 14:45:14 [INFO] === AI Test Selector Started ===
-2025-08-13 14:45:14 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
-2025-08-13 14:45:14 [INFO] Changed methods detected: set()
-2025-08-13 14:45:14 [INFO] Changed locators detected: set()
-2025-08-13 14:45:15 [INFO] Dependency map: {}
-2025-08-13 14:45:46 [INFO] === Impact Analysis Report ===
-2025-08-13 14:45:46 [INFO] Impacted Features: Checkout Process, AI Test Feature Selection
-2025-08-13 14:45:46 [INFO] Suggested Tests: test_checkout_page.py, test_ai_test_selector.py
-2025-08-13 14:46:39 [INFO] Running AI-selected test files: ['tests/test_login.py']
-2025-08-13 14:47:25 [INFO] === AI Test Selector Started ===
-2025-08-13 14:47:26 [INFO] Changed files: ['logs/ai_test_selector.log', 'tests/test_002_validate_waning_message.py']
-2025-08-13 14:47:26 [INFO] Changed methods detected: {'test_super_admin_warning_message'}
-2025-08-13 14:47:26 [INFO] Changed locators detected: set()
-2025-08-13 14:47:27 [INFO] Dependency map: {'test_super_admin_warning_message': ['./tests/test_002_validate_waning_message.py']}
-2025-08-13 14:47:58 [INFO] === Impact Analysis Report ===
-2025-08-13 14:47:58 [INFO] Impacted Features: AI Test Feature, Super Admin Warning Message
-2025-08-13 14:47:58 [INFO] Suggested Tests: test_ai_test_feature.py, test_super_admin_warning_message.py
-2025-08-13 14:47:58 [INFO] Running directly changed test files: ['tests/test_002_validate_waning_message.py']
-2025-08-13 14:49:42 [INFO] === AI Test Selector Started ===
-2025-08-13 14:49:42 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
-2025-08-13 14:49:42 [INFO] Changed methods detected: {'assert_toast_contains'}
-2025-08-13 14:49:42 [INFO] Changed locators detected: set()
-2025-08-13 14:49:43 [INFO] Dependency map: {'assert_toast_contains': ['./pages/checkout_page.py', './tests/test_002_validate_waning_message.py']}
-2025-08-13 14:50:07 [INFO] === Impact Analysis Report ===
-2025-08-13 14:50:07 [INFO] Impacted Features: Checkout Process, Warning Messages
-2025-08-13 14:50:07 [INFO] Suggested Tests: test_002_validate_waning_message.py
-2025-08-13 14:50:07 [INFO] Running tests that reference changed methods: ['tests/test_002_validate_waning_message.py']
+2025-08-13 14:55:12 [INFO] === AI Test Selector Started ===
+2025-08-13 14:55:12 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 14:55:13 [INFO] Changed methods detected: set()
+2025-08-13 15:26:57 [INFO] === AI Test Selector Started ===
+2025-08-13 15:26:57 [INFO] Changed files: ['ai_test_selector_4.py', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 15:26:57 [INFO] Changed methods detected: {'run_git_cmd', 'get_changed_locators', 'get_changed_methods', 'get_changed_files', 'find_tests_using_locators'}
+2025-08-13 15:26:57 [INFO] Changed locators detected: set()
+2025-08-13 15:27:03 [INFO] Dependency map: {'run_git_cmd': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_methods': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_files': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_locators': ['./ai_test_selector_4.py'], 'find_tests_using_locators': ['./ai_test_selector_4.py']}
+2025-08-13 15:28:29 [ERROR] Error parsing feature report: Expecting value: line 1 column 2 (char 1)
+2025-08-13 15:29:19 [WARNING] No relevant test files found.

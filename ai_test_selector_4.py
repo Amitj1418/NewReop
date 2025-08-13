@@ -5,7 +5,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import requests
 import json
-from difflib import get_close_matches
+from difflib import get_close_matches, SequenceMatcher
 
 # -----------------------------
 # Logging Setup
@@ -42,7 +42,6 @@ MODEL = "mistral"
 # Git helpers
 # -----------------------------
 def run_git_cmd(cmd):
-    """Run a git command safely and always return a string."""
     try:
         result = subprocess.run(
             cmd,
@@ -58,50 +57,37 @@ def run_git_cmd(cmd):
         logging.error(f"Git command failed: {e.stderr}")
         return ""
 
-
 def get_changed_files():
     result = run_git_cmd(["git", "diff", "--name-only", "HEAD~1"])
     changed_files = [f.strip() for f in result.split("\n") if f.strip()]
     logging.info(f"Changed files: {changed_files}")
     return changed_files
 
-
 def get_changed_methods(changed_files):
-    """
-    Detects changed methods by scanning diffs for any added/modified lines
-    inside a function, not just when the 'def' line changes.
-    """
     changed_methods = set()
-
     for file_path in changed_files:
         if not file_path.endswith(".py"):
             continue
-
         diff_output = run_git_cmd(["git", "diff", "HEAD~1", "--", file_path])
         if not diff_output:
             continue
-
         current_method = None
-
         for line in diff_output.splitlines():
             def_match = re.match(r'^[\+\s-]*def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', line)
             if def_match:
                 current_method = def_match.group(1)
                 continue
-
             if line.startswith(('+', '-')) and not line.startswith(('+++', '---')) and current_method:
                 changed_methods.add(current_method)
-
             if line and not line.startswith((' ', '+', '-')):
                 current_method = None
-
     logging.info(f"Changed methods detected: {changed_methods}")
     return changed_methods
 
-
 def get_changed_locators(changed_files):
     """
-    Detects changed locators by scanning diffs for common locator patterns.
+    Detect changed locators in Python diffs.
+    Uses fuzzy matching so that small text changes are still detected.
     """
     changed_locators = set()
     locator_pattern = re.compile(
@@ -111,15 +97,14 @@ def get_changed_locators(changed_files):
     for file_path in changed_files:
         if not file_path.endswith(".py"):
             continue
-
         diff_output = run_git_cmd(["git", "diff", "HEAD~1", "--", file_path])
         if not diff_output:
             continue
-
         for line in diff_output.splitlines():
             match = locator_pattern.search(line)
             if match:
-                changed_locators.add(match.group(1))
+                locator_value = match.group(1)
+                changed_locators.add(locator_value)
 
     logging.info(f"Changed locators detected: {changed_locators}")
     return changed_locators
@@ -152,7 +137,6 @@ def get_all_test_files():
                 all_tests.append(os.path.join(root, file).replace("\\", "/"))
     return all_tests
 
-
 def find_tests_using_methods(test_files, changed_methods):
     matched_tests = []
     patterns = [
@@ -165,27 +149,35 @@ def find_tests_using_methods(test_files, changed_methods):
         try:
             with open(test_file, 'r', encoding='utf-8') as f:
                 content = f.read()
-
             if any(p.search(content) for p in patterns):
                 matched_tests.append(test_file)
-
         except Exception as e:
             logging.error(f"Error reading {test_file}: {e}")
 
     return matched_tests
 
-
 def find_tests_using_locators(test_files, changed_locators):
+    """
+    Finds test files that use the given changed locators.
+    Uses fuzzy matching so small text changes in locators still match tests.
+    """
     matched_tests = []
-    for locator in changed_locators:
-        for test_file in test_files:
-            try:
-                with open(test_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    if locator in content:
+    for test_file in test_files:
+        try:
+            with open(test_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            for locator in changed_locators:
+                if locator in content:
+                    matched_tests.append(test_file)
+                    break
+                # Fuzzy match for small changes
+                for word in content.split():
+                    if SequenceMatcher(None, locator, word).ratio() > 0.6:
                         matched_tests.append(test_file)
-            except Exception as e:
-                logging.error(f"Error reading {test_file}: {e}")
+                        break
+        except Exception as e:
+            logging.error(f"Error reading {test_file}: {e}")
 
     return list(set(matched_tests))
 
@@ -216,7 +208,6 @@ Return one file per line, nothing else.
     except Exception as e:
         logging.error(f"Error parsing Ollama output: {e}")
         return []
-
 
 def map_ai_files_to_repo(ai_files, repo_tests):
     mapped_files = []
@@ -277,14 +268,12 @@ if __name__ == "__main__":
         for f in files if f.endswith('.py')
     ]
 
-    # Build dependency map
     dependency_map = build_dependency_map(all_repo_files, changed_methods)
 
-    # AI Feature Mapping
     feature_analysis = map_changes_to_features_ai(changed_files, dependency_map)
     log_impact_report(feature_analysis)
 
-    # Step 0 — Match tests by locator usage
+    # Step 0 — Match tests by locator usage (fuzzy matching)
     if changed_locators:
         locator_matched_tests = find_tests_using_locators(repo_tests, changed_locators)
         if locator_matched_tests:
