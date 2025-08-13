@@ -1,0 +1,8 @@
+2025-08-13 14:34:14 [INFO] === AI Test Selector Started ===
+2025-08-13 14:34:15 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 14:34:21 [INFO] Changed methods detected: set()
+2025-08-13 14:34:32 [INFO] Dependency map: {}
+2025-08-13 14:35:08 [INFO] === Impact Analysis Report ===
+2025-08-13 14:35:08 [INFO] Impacted Features: Checkout Process, AI Test Selection
+2025-08-13 14:35:08 [INFO] Suggested Tests: test_checkout_page.py, test_ai_test_selector.py
+2025-08-13 14:36:41 [WARNING] No relevant test files found.

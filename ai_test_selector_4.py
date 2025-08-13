@@ -7,8 +7,9 @@ import requests
 import json
 from difflib import get_close_matches
 
-# logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-
+# -----------------------------
+# Logging Setup
+# -----------------------------
 LOG_DIR = "logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 
@@ -97,6 +98,32 @@ def get_changed_methods(changed_files):
     logging.info(f"Changed methods detected: {changed_methods}")
     return changed_methods
 
+
+def get_changed_locators(changed_files):
+    """
+    Detects changed locators by scanning diffs for common locator patterns.
+    """
+    changed_locators = set()
+    locator_pattern = re.compile(
+        r'^[\+|-].*(By\.[A-Z_]+\s*,\s*[\'"].+?[\'"])', re.IGNORECASE
+    )
+
+    for file_path in changed_files:
+        if not file_path.endswith(".py"):
+            continue
+
+        diff_output = run_git_cmd(["git", "diff", "HEAD~1", "--", file_path])
+        if not diff_output:
+            continue
+
+        for line in diff_output.splitlines():
+            match = locator_pattern.search(line)
+            if match:
+                changed_locators.add(match.group(1))
+
+    logging.info(f"Changed locators detected: {changed_locators}")
+    return changed_locators
+
 # -----------------------------
 # Dependency Mapping
 # -----------------------------
@@ -146,6 +173,7 @@ def find_tests_using_methods(test_files, changed_methods):
             logging.error(f"Error reading {test_file}: {e}")
 
     return matched_tests
+
 
 def find_tests_using_locators(test_files, changed_locators):
     matched_tests = []
@@ -240,6 +268,8 @@ if __name__ == "__main__":
     logging.info("=== AI Test Selector Started ===")
     changed_files = get_changed_files()
     changed_methods = get_changed_methods(changed_files)
+    changed_locators = get_changed_locators(changed_files)
+
     repo_tests = get_all_test_files()
     all_repo_files = [
         os.path.join(root, f).replace("\\", "/")
@@ -253,6 +283,14 @@ if __name__ == "__main__":
     # AI Feature Mapping
     feature_analysis = map_changes_to_features_ai(changed_files, dependency_map)
     log_impact_report(feature_analysis)
+
+    # Step 0 — Match tests by locator usage
+    if changed_locators:
+        locator_matched_tests = find_tests_using_locators(repo_tests, changed_locators)
+        if locator_matched_tests:
+            logging.info(f"Running tests that reference changed locators: {locator_matched_tests}")
+            os.system(f"pytest {' '.join(locator_matched_tests)}")
+            exit(0)
 
     # Step 1 — Direct match by changed test file
     changed_test_files = [f for f in changed_files if f in repo_tests]
