@@ -3,3 +3,14 @@
 2025-08-13 18:26:34 [INFO] Changed methods detected: set()
 2025-08-13 18:26:34 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
 2025-08-13 18:26:34 [INFO] Running tests that reference changed methods: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-13 19:01:51 [INFO] === AI Test Selector Started ===
+2025-08-13 19:01:51 [INFO] Changed files: ['logs/ai_test_selector.log', 'tests/test_001_validate_username_password.py']
+2025-08-13 19:01:51 [INFO] Changed methods detected: set()
+2025-08-13 19:01:52 [INFO] Changed locators detected: set()
+2025-08-13 19:01:52 [INFO] Running directly changed test files: ['tests/test_001_validate_username_password.py']
+2025-08-13 19:04:02 [INFO] === Fully AI-Driven Test Runner Started ===
+2025-08-13 19:06:01 [INFO] AI suggested tests: ["Based on the given log and changes in the 'tests/test_001_validate_username_password.py' file, it appears that only this specific test file has been directly modified. Therefore, the test file most likely impacted is:", '```', 'tests/test_001_validate_username_password.py', '```']
+2025-08-13 19:06:01 [INFO] Running selected tests: ["Based on the given log and changes in the 'tests/test_001_validate_username_password.py' file, it appears that only this specific test file has been directly modified. Therefore, the test file most likely impacted is:", '```', 'tests/test_001_validate_username_password.py', '```']
+2025-08-13 19:10:29 [INFO] === Fully AI-Driven Test Runner Started ===
+2025-08-13 19:13:06 [INFO] AI suggested tests: ['Based on the changes in the logs and the diff provided, only the following test file seems to be impacted:', '```', 'tests/test_001_validate_username_password.py', '```']
+2025-08-13 19:13:06 [INFO] Running selected tests: ['Based on the changes in the logs and the diff provided, only the following test file seems to be impacted:', '```', 'tests/test_001_validate_username_password.py', '```']

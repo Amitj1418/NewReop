@@ -8,7 +8,7 @@ import subprocess
 # -----------------------------
 # Logging setup
 # -----------------------------
-LOG_DIR = "logs"
+LOG_DIR = "../logs"
 os.makedirs(LOG_DIR, exist_ok=True)
 
 file_handler = RotatingFileHandler(
