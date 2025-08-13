@@ -50,3 +50,8 @@
 2025-08-13 18:16:40,764 [ERROR] AI fallback failed: invalid syntax (<string>, line 1)
 2025-08-13 18:16:40,764 [INFO] Running impacted tests: []
 2025-08-13 18:16:40,764 [INFO] No impacted tests detected
+2025-08-13 18:20:29 [INFO] === AI Test Selector Started ===
+2025-08-13 18:20:29 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 18:20:29 [INFO] Changed methods detected: set()
+2025-08-13 18:20:29 [INFO] Changed locators detected: {'TOAST_MESSAGE_LOCATOR'}
+2025-08-13 18:20:29 [INFO] Running tests that reference changed methods: ['tests/test_002_validate_waning_message.py']
