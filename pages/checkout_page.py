@@ -16,7 +16,7 @@ class CheckoutPage:
     LOGIN_BUTTON_LOCATOR = "//button[@type='submit']"
     SUPER_ADMIN_LINK_LOCATOR = "//div[@class='mat-tab-label-content' and text()='Super Admin']"
     HOSPITAL_USER_LINK_LOCATOR = "//div[@class='mat-tab-label-content' and text()='Hospital User']"
-    TOAST_MESSAGE_LOCATOR = "//div[@aria-label='Invalid Email or Passwords']"
+    TOAST_MESSAGE_LOCATOR = "//div[@aria-label='Invalid Email or Password']"
     USERNAME_LABEL_LOCATOR = "//span[@class='user-name']"
 
 
