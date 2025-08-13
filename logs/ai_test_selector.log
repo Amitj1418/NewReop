@@ -8,3 +8,10 @@
 2025-08-13 15:27:03 [INFO] Dependency map: {'run_git_cmd': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_methods': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_files': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_locators': ['./ai_test_selector_4.py'], 'find_tests_using_locators': ['./ai_test_selector_4.py']}
 2025-08-13 15:28:29 [ERROR] Error parsing feature report: Expecting value: line 1 column 2 (char 1)
 2025-08-13 15:29:19 [WARNING] No relevant test files found.
+2025-08-13 15:30:11 [INFO] === AI Test Selector Started ===
+2025-08-13 15:30:12 [INFO] Changed files: ['ai_test_selector_4.py', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 15:30:12 [INFO] Changed methods detected: {'get_changed_locators', 'run_git_cmd', 'get_changed_methods', 'get_changed_files', 'find_tests_using_locators'}
+2025-08-13 15:30:12 [INFO] Changed locators detected: set()
+2025-08-13 15:30:16 [INFO] Dependency map: {'run_git_cmd': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_methods': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_files': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_locators': ['./ai_test_selector_4.py'], 'find_tests_using_locators': ['./ai_test_selector_4.py']}
+2025-08-13 15:31:30 [ERROR] Error parsing feature report: Expecting value: line 1 column 2 (char 1)
+2025-08-13 15:32:43 [INFO] Running AI-selected test files: ['tests/test_001_validate_username_password.py', 'tests/test_login.py']
