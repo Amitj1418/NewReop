@@ -42,3 +42,5 @@
 2025-08-13 18:05:57,554 [INFO] Changed locators: set()
 2025-08-13 18:05:57,555 [INFO] Methods impacted by locators: set()
 2025-08-13 18:05:57,558 [INFO] No direct matches found — using AI fallback
+2025-08-13 18:08:09,502 [INFO] === AI Test Selector Started ===
+2025-08-13 18:08:09,559 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
