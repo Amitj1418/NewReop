@@ -4,3 +4,21 @@
 2025-08-13 17:48:27 [INFO] === AI Test Selector Started ===
 2025-08-13 17:48:27 [INFO] Changed files: ['pages/checkout_page.py']
 2025-08-13 17:48:28 [INFO] Running impacted tests: ['tests\\test_001_validate_username_password.py', 'tests\\test_002_validate_waning_message.py', 'tests\\test_login.py']
+2025-08-13 17:49:46 [INFO] === AI Test Selector Started ===
+2025-08-13 17:49:46 [INFO] Changed files: ['tests/test_002_validate_waning_message.py']
+2025-08-13 17:49:46 [INFO] No direct matches found â€” using AI fallback
+2025-08-13 17:50:40 [ERROR] AI fallback failed: unterminated string literal (detected at line 1) (<string>, line 1)
+2025-08-13 17:50:40 [INFO] Running impacted tests: []
+2025-08-13 17:50:40 [INFO] No impacted tests detected
+2025-08-13 17:52:19 [INFO] === AI Test Selector Started ===
+2025-08-13 17:52:19 [INFO] Changed files: ['logs/ai_test_selector.log', 'tests/test_002_validate_waning_message.py']
+2025-08-13 17:52:19 [INFO] Changed methods detected: {'test_super_admin_warning_message'}
+2025-08-13 17:52:19 [INFO] Running directly changed test files: ['tests/test_002_validate_waning_message.py']
+2025-08-13 17:56:35,804 [INFO] === AI Test Selector Started ===
+2025-08-13 17:56:35,859 [INFO] Changed files: ['logs/ai_test_selector.log', 'tests/test_002_validate_waning_message.py']
+2025-08-13 17:56:35,910 [INFO] Changed locators: set()
+2025-08-13 17:56:35,910 [INFO] Methods impacted by locators: set()
+2025-08-13 17:56:35,914 [INFO] No direct matches found — using AI fallback
+2025-08-13 17:57:23,832 [ERROR] AI fallback failed: unterminated string literal (detected at line 1) (<string>, line 1)
+2025-08-13 17:57:23,832 [INFO] Running impacted tests: []
+2025-08-13 17:57:23,832 [INFO] No impacted tests detected
