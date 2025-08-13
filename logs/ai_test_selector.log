@@ -55,3 +55,8 @@
 2025-08-13 18:20:29 [INFO] Changed methods detected: set()
 2025-08-13 18:20:29 [INFO] Changed locators detected: {'TOAST_MESSAGE_LOCATOR'}
 2025-08-13 18:20:29 [INFO] Running tests that reference changed methods: ['tests/test_002_validate_waning_message.py']
+2025-08-13 18:21:20 [INFO] === AI Test Selector Started ===
+2025-08-13 18:21:20 [INFO] Changed files: ['logs/ai_test_selector.log', 'tests/test_002_validate_waning_message.py']
+2025-08-13 18:21:20 [INFO] Changed methods detected: {'test_super_admin_warning_message'}
+2025-08-13 18:21:20 [INFO] Changed locators detected: set()
+2025-08-13 18:21:20 [INFO] Running directly changed test files: ['tests/test_002_validate_waning_message.py']
