@@ -32,3 +32,8 @@
 2025-08-13 18:02:58,697 [INFO] Changed locators: {'TOAST_MESSAGE_LOCATOR'}
 2025-08-13 18:02:58,700 [INFO] Methods impacted by locators: {'__init__', 'assert_toast_contains'}
 2025-08-13 18:02:58,702 [INFO] Running impacted tests: ['tests\\test_002_validate_waning_message.py']
+2025-08-13 18:04:17,350 [INFO] === AI Test Selector Started ===
+2025-08-13 18:04:17,431 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 18:04:17,515 [INFO] Changed locators: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-13 18:04:17,518 [INFO] Methods impacted by locators: {'__init__', 'login_with_super_admin', 'click_super_admin_link'}
+2025-08-13 18:04:17,521 [INFO] Running impacted tests: ['tests\\test_001_validate_username_password.py', 'tests\\test_002_validate_waning_message.py', 'tests\\test_login.py']
