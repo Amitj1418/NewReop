@@ -24,3 +24,12 @@
 2025-08-13 14:47:58 [INFO] Impacted Features: AI Test Feature, Super Admin Warning Message
 2025-08-13 14:47:58 [INFO] Suggested Tests: test_ai_test_feature.py, test_super_admin_warning_message.py
 2025-08-13 14:47:58 [INFO] Running directly changed test files: ['tests/test_002_validate_waning_message.py']
+2025-08-13 14:49:42 [INFO] === AI Test Selector Started ===
+2025-08-13 14:49:42 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 14:49:42 [INFO] Changed methods detected: {'assert_toast_contains'}
+2025-08-13 14:49:42 [INFO] Changed locators detected: set()
+2025-08-13 14:49:43 [INFO] Dependency map: {'assert_toast_contains': ['./pages/checkout_page.py', './tests/test_002_validate_waning_message.py']}
+2025-08-13 14:50:07 [INFO] === Impact Analysis Report ===
+2025-08-13 14:50:07 [INFO] Impacted Features: Checkout Process, Warning Messages
+2025-08-13 14:50:07 [INFO] Suggested Tests: test_002_validate_waning_message.py
+2025-08-13 14:50:07 [INFO] Running tests that reference changed methods: ['tests/test_002_validate_waning_message.py']
