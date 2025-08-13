@@ -1,0 +1,6 @@
+2025-08-13 14:07:23 [INFO] === AI Test Selector Started ===
+2025-08-13 14:07:23 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 14:07:24 [INFO] Changed methods detected: set()
+2025-08-13 14:07:25 [INFO] Dependency map: {}
+2025-08-13 14:08:25 [ERROR] Error parsing feature report: Expecting value: line 1 column 2 (char 1)
+2025-08-13 14:08:53 [INFO] Running AI-selected test files: ['tests/test_001_validate_username_password.py', 'tests/test_login.py']

@@ -148,6 +148,20 @@ def find_tests_using_methods(test_files, changed_methods):
 
     return matched_tests
 
+def find_tests_using_locators(test_files, changed_locators):
+    matched_tests = []
+    for locator in changed_locators:
+        for test_file in test_files:
+            try:
+                with open(test_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    if locator in content:
+                        matched_tests.append(test_file)
+            except Exception as e:
+                logging.error(f"Error reading {test_file}: {e}")
+
+    return list(set(matched_tests))
+
 # -----------------------------
 # AI helpers
 # -----------------------------
