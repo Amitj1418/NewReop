@@ -27,3 +27,12 @@
 2025-08-13 15:37:19 [INFO] === AI Test Selector Started ===
 2025-08-13 15:37:20 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
 2025-08-13 15:37:20 [INFO] Changed methods detected: set()
+2025-08-13 15:43:54 [INFO] === AI Test Selector Started ===
+2025-08-13 15:43:54 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 15:43:54 [INFO] Changed methods detected: {'assert_toast_contains', 'click_hospital_user_link', 'login_with_hospital_user', 'validate_dashboard_page', 'click_super_admin_link', 'login_with_super_admin'}
+2025-08-13 15:43:54 [INFO] Changed locators detected: set()
+2025-08-13 15:43:58 [INFO] Dependency map: {'assert_toast_contains': ['./pages/checkout_page.py', './tests/test_002_validate_waning_message.py'], 'click_hospital_user_link': ['./pages/checkout_page.py'], 'login_with_hospital_user': ['./pages/checkout_page.py'], 'validate_dashboard_page': ['./pages/checkout_page.py', './tests/test_001_validate_username_password.py', './tests/test_login.py'], 'click_super_admin_link': ['./pages/checkout_page.py'], 'login_with_super_admin': ['./pages/checkout_page.py', './tests/test_001_validate_username_password.py', './tests/test_002_validate_waning_message.py', './tests/test_login.py']}
+2025-08-13 15:45:07 [INFO] === Impact Analysis Report ===
+2025-08-13 15:45:07 [INFO] Impacted Features: Checkout Process, User Authentication (Hospital User and Super Admin)
+2025-08-13 15:45:07 [INFO] Suggested Tests: test_001_validate_username_password.py, test_002_validate_waning_message.py, test_login.py, test_dashboard_page.py
+2025-08-13 15:45:07 [INFO] Running tests that reference changed methods: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']

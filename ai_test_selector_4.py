@@ -87,24 +87,45 @@ def get_changed_methods(changed_files):
 def get_changed_locators(changed_files):
     """
     Detect changed locators in Python diffs.
-    Uses fuzzy matching so that small text changes are still detected.
+    Matches both By.* patterns and variable assignments containing locator strings.
     """
     changed_locators = set()
-    locator_pattern = re.compile(
-        r'^[\+|-].*(By\.[A-Z_]+\s*,\s*[\'"].+?[\'"])', re.IGNORECASE
+
+    # Matches By.XPATH, By.ID, By.CSS_SELECTOR style
+    by_pattern = re.compile(r'^[\+\-].*(By\.[A-Z_]+\s*,\s*[\'"].+?[\'"])', re.IGNORECASE)
+
+    # Matches locator variables in ALL_CAPS with assignment to a quoted string
+    var_pattern = re.compile(
+        r'^[\+\-]\s*([A-Z0-9_]+)\s*=\s*[\'"](.+?)[\'"]'
     )
 
     for file_path in changed_files:
         if not file_path.endswith(".py"):
             continue
+
         diff_output = run_git_cmd(["git", "diff", "HEAD~1", "--", file_path])
         if not diff_output:
             continue
+
         for line in diff_output.splitlines():
-            match = locator_pattern.search(line)
-            if match:
-                locator_value = match.group(1)
-                changed_locators.add(locator_value)
+            # Ignore diff headers
+            if line.startswith(('+++', '---', '@@')):
+                continue
+
+            # Match By.* locators
+            by_match = by_pattern.search(line)
+            if by_match:
+                changed_locators.add(by_match.group(1))
+                continue
+
+            # Match variable-based locators
+            var_match = var_pattern.search(line)
+            if var_match:
+                var_name, locator_value = var_match.groups()
+                # Only consider locator-like variable names or XPath/CSS patterns
+                if any(keyword in var_name for keyword in ["LINK", "LOCATOR", "SELECTOR", "XPATH"]) \
+                   or locator_value.strip().startswith(("//", ".", "#", "[")):
+                    changed_locators.add(locator_value.strip())
 
     logging.info(f"Changed locators detected: {changed_locators}")
     return changed_locators
