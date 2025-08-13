@@ -128,3 +128,35 @@
 2025-08-13 17:14:18 [INFO] Dependency map: {'run_git_cmd': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'find_tests_using_methods': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_all_test_files': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'ask_ollama_for_tests': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_files': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'map_ai_files_to_repo': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'find_tests_using_locators': ['./ai_test_selector_4.py'], 'map_changes_to_features_ai': ['./ai_test_selector_4.py'], 'log_impact_report': ['./ai_test_selector_4.py'], 'build_dependency_map': ['./ai_test_selector_4.py'], 'get_changed_locators': ['./ai_test_selector_4.py']}
 2025-08-13 17:15:49 [ERROR] Error parsing feature report: Expecting value: line 1 column 2 (char 1)
 2025-08-13 17:17:20 [INFO] Running AI-selected test files: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-13 17:18:47 [INFO] === AI Test Selector Started ===
+2025-08-13 17:18:47 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 17:18:47 [INFO] Changed methods detected: set()
+2025-08-13 17:18:48 [INFO] Changed locators detected: {"//div[@class='mat-tab-label-content' and text()='Super Admins']", "//div[@class='mat-tab-label-content' and text()='Super Admin']"}
+2025-08-13 17:18:48 [INFO] Changed locator variables detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-13 17:18:49 [INFO] Dependency map: {}
+2025-08-13 17:19:34 [ERROR] Error parsing feature report: Expecting value: line 1 column 2 (char 1)
+2025-08-13 17:20:29 [WARNING] No relevant test files found. Nothing to run.
+2025-08-13 17:21:18 [INFO] === AI Test Selector Started ===
+2025-08-13 17:21:18 [INFO] Changed files: ['ai_test_selector_4.py', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 17:21:19 [INFO] Changed methods: {'get_changed_methods', 'find_tests_using_locators', 'get_changed_files', 'get_changed_methods_and_locators', 'build_dependency_map', 'get_changed_locators', 'log_impact_report', 'find_tests_using_methods', 'ask_ollama_for_tests', 'run_git_cmd', 'map_changes_to_features_ai', 'map_ai_files_to_repo'}
+2025-08-13 17:21:19 [INFO] Changed locators: set()
+2025-08-13 17:21:19 [INFO] Changed variables: set()
+2025-08-13 17:21:56 [INFO] Running impacted tests: ['tests/test_001_validate_username_password.py', 'tests/test_login.py']
+2025-08-13 17:26:39,493 [INFO] === AI Test Selector Started ===
+2025-08-13 17:26:39,567 [INFO] Changed files: ['pages/checkout_page.py']
+2025-08-13 17:26:39,639 [INFO] Changed methods: set()
+2025-08-13 17:26:39,639 [INFO] Changed locators: {'K_LOCATOR'}
+2025-08-13 17:26:39,639 [INFO] Changed variables: {'s'}
+2025-08-13 17:26:39,784 [INFO] No direct matches found — using AI fallback
+2025-08-13 17:27:34,900 [ERROR] AI fallback failed: unterminated string literal (detected at line 1) (<string>, line 1)
+2025-08-13 17:27:34,901 [INFO] Running impacted tests: []
+2025-08-13 17:27:34,901 [INFO] No impacted tests detected
+2025-08-13 17:29:17,453 [INFO] === AI Test Selector Started ===
+2025-08-13 17:29:17,533 [INFO] Changed files: ['pages/checkout_page.py']
+2025-08-13 17:29:17,610 [INFO] Changed methods: set()
+2025-08-13 17:29:17,610 [INFO] Changed locators: {'K_LOCATOR'}
+2025-08-13 17:29:17,610 [INFO] Changed variables: {'s'}
+2025-08-13 17:29:17,757 [INFO] No direct matches found — using AI fallback
+2025-08-13 17:30:02,467 [ERROR] AI fallback failed: invalid syntax (<string>, line 1)
+2025-08-13 17:30:02,468 [INFO] Running impacted tests: []
+2025-08-13 17:30:02,468 [INFO] No impacted tests detected
