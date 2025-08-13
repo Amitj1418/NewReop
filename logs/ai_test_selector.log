@@ -6,3 +6,8 @@
 2025-08-12 20:44:35 [INFO] Changed files: ['logs/ai_test_selector.log', 'tests/test_001_validate_username_password.py']
 2025-08-12 20:44:35 [INFO] Changed methods detected: set()
 2025-08-12 20:44:35 [INFO] Running directly changed test files: ['tests/test_001_validate_username_password.py']
+2025-08-12 20:45:57 [INFO] === AI Test Selector Started ===
+2025-08-12 20:45:57 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-12 20:45:57 [INFO] Changed methods detected: {'assert_toast_contains', 'validate_dashboard_page'}
+2025-08-12 20:45:57 [INFO] Running tests that reference changed methods: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+
