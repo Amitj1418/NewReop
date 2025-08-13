@@ -22,3 +22,8 @@
 2025-08-13 17:57:23,832 [ERROR] AI fallback failed: unterminated string literal (detected at line 1) (<string>, line 1)
 2025-08-13 17:57:23,832 [INFO] Running impacted tests: []
 2025-08-13 17:57:23,832 [INFO] No impacted tests detected
+2025-08-13 17:58:13,187 [INFO] === AI Test Selector Started ===
+2025-08-13 17:58:13,245 [INFO] Changed files: ['pages/checkout_page.py']
+2025-08-13 17:58:13,309 [INFO] Changed locators: {'TOAST_MESSAGE_LOCATOR'}
+2025-08-13 17:58:13,312 [INFO] Methods impacted by locators: {'__init__', 'assert_toast_contains'}
+2025-08-13 17:58:13,314 [INFO] Running impacted tests: ['tests\\test_002_validate_waning_message.py']
