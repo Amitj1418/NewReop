@@ -94,12 +94,21 @@ def ask_ai_for_tests(changed_files, file_diffs, repo_tests):
         )
         response.raise_for_status()
         output = response.json().get("response", "")
-        selected = [line.strip() for line in output.splitlines() if line.strip()]
-        logging.info(f"AI suggested tests: {selected}")
-        return selected
+        return output
     except Exception as e:
         logging.error(f"AI request failed: {e}")
-        return []
+        return ""
+
+def parse_ai_selected_tests(output, repo_tests):
+    """
+    Filter AI output to include only valid test file paths from repo_tests
+    """
+    selected = []
+    for line in output.splitlines():
+        line = line.strip().strip("`")  # remove backticks
+        if line in repo_tests:
+            selected.append(line)
+    return selected
 
 # -----------------------------
 # Main
@@ -121,10 +130,11 @@ if __name__ == "__main__":
     file_diffs = {f: get_file_diff(f) for f in changed_files}
 
     # Ask AI which tests to run
-    tests_to_run = ask_ai_for_tests(changed_files, file_diffs, repo_tests)
+    raw_ai_output = ask_ai_for_tests(changed_files, file_diffs, repo_tests)
+    tests_to_run = parse_ai_selected_tests(raw_ai_output, repo_tests)
 
     if tests_to_run:
         logging.info(f"Running selected tests: {tests_to_run}")
         os.system(f"pytest {' '.join(tests_to_run)}")
     else:
-        logging.warning("No relevant test files selected by AI. Exiting.")
+        logging.warning("No valid test files selected by AI. Exiting.")
