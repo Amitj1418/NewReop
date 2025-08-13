@@ -17,27 +17,61 @@ def run_git_cmd(cmd):
 
 def get_changed_files():
     changed_files = run_git_cmd(["git", "diff", "--name-only", "HEAD~1", "HEAD"]).split("\n")
-    changed_files = [f for f in changed_files if f.strip()]
-    return changed_files
+    return [f.strip() for f in changed_files if f.strip()]
 
 def get_diff_for_file(file_path):
     return run_git_cmd(["git", "diff", "HEAD~1", "HEAD", "--", file_path])
 
 def get_changed_methods(diff_text):
+    """Finds new or modified method names from diff"""
     method_pattern = re.compile(r"^\+.*def\s+(\w+)\s*\(", re.MULTILINE)
     return set(method_pattern.findall(diff_text))
 
 def get_changed_locators(diff_text):
-    # Detect constants like EMAIL_TEXT_INPUT_LOCATOR = "//xpath"
-    locator_pattern = re.compile(
-        r"^\+.*([A-Z_]+_LOCATOR)\s*=\s*['\"](?:/|\.|//)[^'\"]+['\"]",
-        re.MULTILINE
-    )
-    return set(locator_pattern.findall(diff_text))
+    """
+    Detects changes to locator variable names OR their values in any file.
+    Returns set of locator variable names that have been modified.
+    """
+    changed_locators = set()
+    locator_var_pattern = re.compile(r"^\+\s*(\w+_LOCATOR)\s*=\s*[\"'](.+?)[\"']", re.MULTILINE)
+    locator_value_pattern = re.compile(r"[\"'](.+?)[\"']")
+
+    current_var = None
+    for line in diff_text.splitlines():
+        if line.startswith("+++ ") or line.startswith("--- "):
+            current_var = None
+            continue
+
+        # Added/modified locator variable
+        match_var = locator_var_pattern.search(line)
+        if match_var:
+            current_var = match_var.group(1)
+            changed_locators.add(current_var)
+            continue
+
+        # Changed locator value
+        if (line.startswith("+") or line.startswith("-")) and current_var:
+            if locator_value_pattern.search(line):
+                changed_locators.add(current_var)
+
+    return changed_locators
 
 def get_changed_variables(diff_text):
     var_pattern = re.compile(r"^\+.*([a-z_]+)\s*=", re.MULTILINE)
     return set(var_pattern.findall(diff_text))
+
+def find_methods_using_locators(locators):
+    """Finds methods where changed locators are used"""
+    impacted_methods = set()
+    for file_path in Path(".").rglob("*.py"):
+        if "pages" in str(file_path):  # Only search in POMs for mapping
+            with open(file_path, encoding="utf-8") as f:
+                content = f.read()
+            for locator in locators:
+                if locator in content:
+                    method_matches = re.findall(r"def\s+(\w+)\s*\(.*\):", content)
+                    impacted_methods.update(method_matches)
+    return impacted_methods
 
 def find_tests_using_methods(methods):
     tests = []
@@ -50,24 +84,21 @@ def find_tests_using_methods(methods):
 
 def find_tests_using_locators(locators):
     tests = []
-    search_targets = list(locators)
-    for file_path in Path(".").rglob("*.py"):
-        if "tests" in str(file_path):
-            with open(file_path, encoding="utf-8") as f:
-                content = f.read()
-            if any(locator in content for locator in search_targets):
-                tests.append(str(file_path))
+    for file_path in Path("tests").rglob("*.py"):
+        with open(file_path, encoding="utf-8") as f:
+            content = f.read()
+        if any(locator in content for locator in locators):
+            tests.append(str(file_path))
     return tests
 
 def ask_ollama_for_tests(changed_files):
-    # Fallback AI-based suggestion
+    import requests
     prompt = f"""
     You are analyzing a Python Playwright test framework.
     The following files changed: {changed_files}
     Suggest relevant pytest test files to run from the 'tests/' directory.
     Only return a Python list of file paths.
     """
-    import requests
     try:
         r = requests.post(
             "http://localhost:11434/api/generate",
@@ -81,29 +112,22 @@ def ask_ollama_for_tests(changed_files):
 
 def main():
     logging.info("=== AI Test Selector Started ===")
-
-    changed_files = get_changed_files()
+    changed_files = [f for f in get_changed_files() if "ai_test_selector" not in f]
     logging.info(f"Changed files: {changed_files}")
-
-    # Ignore selector file itself
-    changed_files = [f for f in changed_files if "ai_test_selector" not in f]
 
     all_changed_methods = set()
     all_changed_locators = set()
-    all_changed_vars = set()
 
     for f in changed_files:
         diff_text = get_diff_for_file(f)
         all_changed_methods |= get_changed_methods(diff_text)
         all_changed_locators |= get_changed_locators(diff_text)
-        all_changed_vars |= get_changed_variables(diff_text)
 
-    logging.info(f"Changed methods: {all_changed_methods}")
-    logging.info(f"Changed locators: {all_changed_locators}")
-    logging.info(f"Changed variables: {all_changed_vars}")
+    # If locator changed, find related methods in POM
+    related_methods_from_locators = find_methods_using_locators(all_changed_locators)
+    all_changed_methods |= related_methods_from_locators
 
     impacted_tests = set()
-
     if all_changed_methods:
         impacted_tests |= set(find_tests_using_methods(all_changed_methods))
     if all_changed_locators:
