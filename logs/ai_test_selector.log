@@ -55,3 +55,22 @@
 2025-08-13 16:04:20 [INFO] Impacted Features: Checkout Process, AI Test Selection
 2025-08-13 16:04:20 [INFO] Suggested Tests: test_checkout_page.py, test_ai_test_selector.py
 2025-08-13 16:04:57 [INFO] Running AI-selected test files: ['tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-13 16:20:31 [INFO] === AI Test Selector Started ===
+2025-08-13 16:20:31 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 16:20:31 [INFO] Changed methods detected: set()
+2025-08-13 16:20:31 [INFO] Changed locators detected: {"//div[@class='mat-tab-label-content' and text()='Super Admins']", "//div[@class='mat-tab-label-content' and text()='Super Admin']"}
+2025-08-13 16:20:33 [INFO] Dependency map: {}
+2025-08-13 16:21:08 [INFO] === Impact Analysis Report ===
+2025-08-13 16:21:08 [INFO] Impacted Features: Checkout Process, AI Test Selection
+2025-08-13 16:21:08 [INFO] Suggested Tests: test_checkout_flow.py, test_ai_test_selector.py
+2025-08-13 16:21:38 [INFO] Running AI-selected test files: ['tests/test_login.py', 'tests/test_001_validate_username_password.py']
+2025-08-13 16:29:36 [INFO] === AI Test Selector Started ===
+2025-08-13 16:29:36 [INFO] Changed files: ['ai_test_selector_4.py', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 16:29:36 [INFO] Changed methods detected: {'find_tests_using_locators', 'get_changed_locators'}
+2025-08-13 16:29:36 [INFO] Changed locators detected: {'...', "//div[@class='mat-tab-label-content' and text()='Super Admin']", "//div[@class='mat-tab-label-content' and text()='Super Admins']"}
+2025-08-13 16:29:36 [INFO] Changed locator variables detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-13 16:29:39 [INFO] Dependency map: {'find_tests_using_locators': ['./ai_test_selector_4.py'], 'get_changed_locators': ['./ai_test_selector_4.py']}
+2025-08-13 16:31:01 [ERROR] Error parsing feature report: Expecting value: line 1 column 2 (char 1)
+2025-08-13 16:31:02 [INFO] Changed locators detected: {'...', "//div[@class='mat-tab-label-content' and text()='Super Admin']", "//div[@class='mat-tab-label-content' and text()='Super Admins']"}
+2025-08-13 16:31:02 [INFO] Changed locator variables detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-13 16:31:32 [INFO] Running AI-selected test files: ['tests/test_002_validate_waning_message.py', 'tests/test_login.py']
