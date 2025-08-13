@@ -3,7 +3,6 @@ import re
 import subprocess
 import logging
 from logging.handlers import RotatingFileHandler
-
 import requests
 import json
 from difflib import get_close_matches
