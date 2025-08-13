@@ -15,3 +15,15 @@
 2025-08-13 15:30:16 [INFO] Dependency map: {'run_git_cmd': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_methods': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_files': ['./ai_test_selector_3.py', './ai_test_selector_4.py'], 'get_changed_locators': ['./ai_test_selector_4.py'], 'find_tests_using_locators': ['./ai_test_selector_4.py']}
 2025-08-13 15:31:30 [ERROR] Error parsing feature report: Expecting value: line 1 column 2 (char 1)
 2025-08-13 15:32:43 [INFO] Running AI-selected test files: ['tests/test_001_validate_username_password.py', 'tests/test_login.py']
+2025-08-13 15:35:10 [INFO] === AI Test Selector Started ===
+2025-08-13 15:35:10 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 15:35:10 [INFO] Changed methods detected: set()
+2025-08-13 15:35:10 [INFO] Changed locators detected: set()
+2025-08-13 15:35:11 [INFO] Dependency map: {}
+2025-08-13 15:35:36 [INFO] === Impact Analysis Report ===
+2025-08-13 15:35:36 [INFO] Impacted Features: Checkout Process, AI Recommendation System
+2025-08-13 15:35:36 [INFO] Suggested Tests: checkout_page_test.py, ai_test_selector_test.py
+2025-08-13 15:36:02 [INFO] Running AI-selected test files: ['tests/test_001_validate_username_password.py', 'tests/test_login.py']
+2025-08-13 15:37:19 [INFO] === AI Test Selector Started ===
+2025-08-13 15:37:20 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-13 15:37:20 [INFO] Changed methods detected: set()

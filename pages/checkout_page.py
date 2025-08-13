@@ -11,36 +11,36 @@ class CheckoutPage:
         self.page = page
         self.base_page_instance = BasePage(self.page)
 
-    EMAIL_TEXT_INPUT = "//input[@placeholder='Email']"
-    PASSWORD_TEXT_INPUT = "//input[@type='password']"
-    LOGIN_BUTTON = "//button[@type='submit']"
-    SUPER_ADMIN_LINK = "//div[@class='mat-tab-label-content' and text()='Super Admins']"
-    HOSPITAL_USER_LINK = "//div[@class='mat-tab-label-content' and text()='Hospital User']"
-    TOAST_MESSAGE = "//div[@aria-label='Invalid Email or Password']"
-    USERNAME_LABEL = "//span[@class='user-name']"
+    EMAIL_TEXT_INPUT_LOCATOR = "//input[@placeholder='Email']"
+    PASSWORD_TEXT_INPUT_LOCATOR = "//input[@type='password']"
+    LOGIN_BUTTON_LOCATOR = "//button[@type='submit']"
+    SUPER_ADMIN_LINK_LOCATOR = "//div[@class='mat-tab-label-content' and text()='Super Admins']"
+    HOSPITAL_USER_LINK_LOCATOR = "//div[@class='mat-tab-label-content' and text()='Hospital User']"
+    TOAST_MESSAGE_LOCATOR = "//div[@aria-label='Invalid Email or Password']"
+    USERNAME_LABEL_LOCATOR = "//span[@class='user-name']"
 
 
 
     def login_with_super_admin(self, username, password):
-        self.base_page_instance.smart_click("Super Admin", self.SUPER_ADMIN_LINK)
-        self.base_page_instance.smart_fill("Email", self.EMAIL_TEXT_INPUT, username)
-        self.base_page_instance.smart_fill("Password", self.PASSWORD_TEXT_INPUT, password)
-        self.base_page_instance.smart_click("Login", self.LOGIN_BUTTON)
+        self.base_page_instance.smart_click("Super Admin", self.SUPER_ADMIN_LINK_LOCATOR)
+        self.base_page_instance.smart_fill("Email", self.EMAIL_TEXT_INPUT_LOCATOR, username)
+        self.base_page_instance.smart_fill("Password", self.PASSWORD_TEXT_INPUT_LOCATOR, password)
+        self.base_page_instance.smart_click("Login", self.LOGIN_BUTTON_LOCATOR)
 
     def login_with_hospital_user(self, username, password):
-        self.base_page_instance.smart_click("Hospital User", self.HOSPITAL_USER_LINK)
-        self.base_page_instance.smart_fill("Email", self.EMAIL_TEXT_INPUT, username)
-        self.base_page_instance.smart_fill("Password", self.PASSWORD_TEXT_INPUT, password)
-        self.base_page_instance.smart_click("Login", self.LOGIN_BUTTON)
+        self.base_page_instance.smart_click("Hospital User", self.HOSPITAL_USER_LINK_LOCATOR)
+        self.base_page_instance.smart_fill("Email", self.EMAIL_TEXT_INPUT_LOCATOR, username)
+        self.base_page_instance.smart_fill("Password", self.PASSWORD_TEXT_INPUT_LOCATOR, password)
+        self.base_page_instance.smart_click("Login", self.LOGIN_BUTTON_LOCATOR)
 
 
     def click_super_admin_link(self):
         """Legacy method - kept for backward compatibility"""
-        self.base_page_instance.smart_click("Super Admin", self.SUPER_ADMIN_LINK)
+        self.base_page_instance.smart_click("Super Admin", self.SUPER_ADMIN_LINK_LOCATOR)
 
     def click_hospital_user_link(self):
         """Legacy method - kept for backward compatibility"""
-        self.base_page_instance.smart_click("Hospital User", self.HOSPITAL_USER_LINK)
+        self.base_page_instance.smart_click("Hospital User", self.HOSPITAL_USER_LINK_LOCATOR)
 
     def validate_url(self, expected_url):
         actual_url = self.page.url
@@ -49,13 +49,13 @@ class CheckoutPage:
         return actual_url == expected_url
 
     def validate_dashboard_page(self):
-        self.wait_for_locator(self.USERNAME_LABEL)
+        self.wait_for_locator(self.USERNAME_LABEL_LOCATOR)
 
 
     def assert_toast_contains(self, expected_text: str):
         """Waits for toast and asserts it contains expected text."""
-        self.wait_for_locator(self.TOAST_MESSAGE)
-        actual = self.page.locator(self.TOAST_MESSAGE)
+        self.wait_for_locator(self.TOAST_MESSAGE_LOCATOR)
+        actual = self.page.locator(self.TOAST_MESSAGE_LOCATOR)
         actual_text = actual.inner_text()
         assert expected_text in actual_text, f"❌ Toast did not match. Expected: '{expected_text}' | Actual: '{actual_text}'"
 
