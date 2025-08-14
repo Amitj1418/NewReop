@@ -133,19 +133,25 @@ def find_tests_using_methods(test_files, changed_methods):
     return matched_tests
 
 # -----------------------------
-# AI fallback (cleaned)
+# AI fallback with strict filtering
 # -----------------------------
 def ask_ai_for_tests(changed_files, file_diffs, repo_tests):
+    repo_tests_list = "\n".join(repo_tests)
     prompt = (
-        "You are an AI Python test selector.\n"
-        "Given the changed files and their diffs, return ONLY the test files impacted.\n"
-        f"Return exactly one valid file path per line, matching the repo's test file list.\n"
-        f"Do not return unrelated tests or more than {max(5, len(changed_files) * 3)} files.\n\n"
+        "You are an AI that selects only impacted pytest files based on the given code changes.\n"
+        "RULES:\n"
+        "1. Only output test files that EXACTLY match names from the provided list.\n"
+        "2. Do not output paths that are not in the list.\n"
+        "3. Each output line must be a valid file path, nothing else.\n"
+        "4. Avoid unrelated tests. If unsure, return fewer files.\n"
+        "5. Output plain text only, no markdown formatting.\n\n"
+        f"Available test files:\n{repo_tests_list}\n\n"
+        "Changed files and diffs:\n"
     )
+
     for f in changed_files:
         diff = file_diffs.get(f, "")
         prompt += f"\nFile: {f}\nDiff:\n{diff}\n"
-    prompt += "\nAvailable test files:\n" + "\n".join(repo_tests)
 
     try:
         response = requests.post(
@@ -158,24 +164,15 @@ def ask_ai_for_tests(changed_files, file_diffs, repo_tests):
         repo_set = set(repo_tests)
         selected = []
         for line in raw_output.splitlines():
-            clean_line = line.strip().strip("`").strip('"').strip("'")
-            if not clean_line or clean_line.lower() in {"```", "tests:", "test files:"}:
-                continue
+            clean_line = line.strip().lstrip("./").replace("\\", "/")
             if clean_line in repo_set:
                 selected.append(clean_line)
-            else:
-                normalized = clean_line.lstrip("./").replace("\\", "/")
-                if normalized in repo_set:
-                    selected.append(normalized)
 
-        # Guard against AI over-selection
+        # Cap AI selection
         max_allowed = max(5, len(changed_files) * 3)
         if len(selected) > max_allowed:
-            logging.warning(f"AI selected {len(selected)} tests — trimming to top {max_allowed}.")
+            logging.warning(f"AI selected {len(selected)} tests — trimming to {max_allowed}.")
             selected = selected[:max_allowed]
-
-        for test in selected:
-            logging.info(f"[AI PICK] {test} — from AI analysis of diffs.")
 
         return selected
 
@@ -187,7 +184,7 @@ def ask_ai_for_tests(changed_files, file_diffs, repo_tests):
 # Main
 # -----------------------------
 if __name__ == "__main__":
-    logging.info("=== Fully AI-Driven Test Runner v3 Started ===")
+    logging.info("=== Fully AI-Driven Test Runner v3 (Improved) Started ===")
 
     changed_files = get_changed_files()
     if not changed_files:
@@ -215,14 +212,14 @@ if __name__ == "__main__":
     # Find impacted tests by method usage
     method_matched_tests = find_tests_using_methods(repo_tests, changed_methods)
 
-    # Get AI-selected tests (directly, no extra parse function)
+    # AI-selected tests
     ai_selected_tests = ask_ai_for_tests(changed_files, file_diffs, repo_tests)
 
-    # Combine all tests
-    all_tests_to_run = sorted(set(method_matched_tests + ai_selected_tests))
+    # Merge results: method matches get priority
+    all_tests_to_run = sorted(set(method_matched_tests) | set(ai_selected_tests))
 
     if all_tests_to_run:
-        logging.info(f"Running all impacted tests: {all_tests_to_run}")
+        logging.info(f"Running impacted tests: {all_tests_to_run}")
         os.system(f"pytest {' '.join(all_tests_to_run)}")
     else:
         logging.warning("No impacted test files found. Exiting.")

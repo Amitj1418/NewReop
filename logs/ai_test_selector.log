@@ -1,0 +1,4 @@
+2025-08-14 19:09:22 [INFO] === Fully AI-Driven Test Runner v3 Started ===
+2025-08-14 19:09:22 [INFO] Changed methods detected: set()
+2025-08-14 19:09:22 [INFO] Changed locators detected: set()
+2025-08-14 19:20:27 [WARNING] No impacted test files found. Exiting.
