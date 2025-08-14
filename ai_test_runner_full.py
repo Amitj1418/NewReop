@@ -1,4 +1,4 @@
-# ai_test_runner_full_v2.py
+# ai_test_runner_full_v3.py
 import os
 import re
 import logging
@@ -71,12 +71,12 @@ def get_all_test_files(test_dir="tests"):
 # -----------------------------
 # Detect changed methods and locators
 # -----------------------------
-def get_changed_methods(changed_files):
+def get_changed_methods(changed_files, file_diffs):
     changed_methods = set()
     for file_path in changed_files:
         if not file_path.endswith(".py"):
             continue
-        diff = get_file_diff(file_path)
+        diff = file_diffs.get(file_path, "")
         current_method = None
         for line in diff.splitlines():
             def_match = re.match(r'^[\+\s-]*def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', line)
@@ -90,12 +90,12 @@ def get_changed_methods(changed_files):
     logging.info(f"Changed methods detected: {changed_methods}")
     return changed_methods
 
-def get_changed_locators(changed_files):
+def get_changed_locators(changed_files, file_diffs):
     changed_locators = set()
     for file_path in changed_files:
         if not file_path.endswith(".py"):
             continue
-        diff = get_file_diff(file_path)
+        diff = file_diffs.get(file_path, "")
         for line in diff.splitlines():
             locator_match = re.match(r'^[\+\-]\s*([A-Z_0-9]+_LOCATOR)\s*=', line)
             if locator_match:
@@ -133,42 +133,61 @@ def find_tests_using_methods(test_files, changed_methods):
     return matched_tests
 
 # -----------------------------
-# AI fallback
+# AI fallback (cleaned)
 # -----------------------------
 def ask_ai_for_tests(changed_files, file_diffs, repo_tests):
     prompt = (
         "You are an AI Python test selector.\n"
-        "Given the changed files and their diffs, return ALL test files impacted.\n"
-        "Do not skip any test. Return one file per line, nothing else.\n\n"
+        "Given the changed files and their diffs, return ONLY the test files impacted.\n"
+        f"Return exactly one valid file path per line, matching the repo's test file list.\n"
+        f"Do not return unrelated tests or more than {max(5, len(changed_files) * 3)} files.\n\n"
     )
     for f in changed_files:
         diff = file_diffs.get(f, "")
         prompt += f"\nFile: {f}\nDiff:\n{diff}\n"
     prompt += "\nAvailable test files:\n" + "\n".join(repo_tests)
+
     try:
         response = requests.post(
             OLLAMA_URL,
             json={"model": MODEL, "prompt": prompt, "stream": False}
         )
         response.raise_for_status()
-        return response.json().get("response", "")
+        raw_output = response.json().get("response", "")
+
+        repo_set = set(repo_tests)
+        selected = []
+        for line in raw_output.splitlines():
+            clean_line = line.strip().strip("`").strip('"').strip("'")
+            if not clean_line or clean_line.lower() in {"```", "tests:", "test files:"}:
+                continue
+            if clean_line in repo_set:
+                selected.append(clean_line)
+            else:
+                normalized = clean_line.lstrip("./").replace("\\", "/")
+                if normalized in repo_set:
+                    selected.append(normalized)
+
+        # Guard against AI over-selection
+        max_allowed = max(5, len(changed_files) * 3)
+        if len(selected) > max_allowed:
+            logging.warning(f"AI selected {len(selected)} tests — trimming to top {max_allowed}.")
+            selected = selected[:max_allowed]
+
+        for test in selected:
+            logging.info(f"[AI PICK] {test} — from AI analysis of diffs.")
+
+        return selected
+
     except Exception as e:
         logging.error(f"AI request failed: {e}")
-        return ""
-
-def parse_ai_selected_tests(output, repo_tests):
-    selected = []
-    for line in output.splitlines():
-        line = line.strip().strip("`")
-        if line in repo_tests:
-            selected.append(line)
-    return selected
+        return []
 
 # -----------------------------
 # Main
 # -----------------------------
 if __name__ == "__main__":
-    logging.info("=== Fully AI-Driven Test Runner v2 Started ===")
+    logging.info("=== Fully AI-Driven Test Runner v3 Started ===")
 
     changed_files = get_changed_files()
     if not changed_files:
@@ -180,9 +199,12 @@ if __name__ == "__main__":
         logging.warning("No test files found. Exiting.")
         exit(0)
 
+    # Cache diffs once
+    file_diffs = {f: get_file_diff(f) for f in changed_files}
+
     # Detect changed methods and locators
-    changed_methods = get_changed_methods(changed_files)
-    changed_locators = get_changed_locators(changed_files)
+    changed_methods = get_changed_methods(changed_files, file_diffs)
+    changed_locators = get_changed_locators(changed_files, file_diffs)
 
     # Map locators to methods
     for file_path in changed_files:
@@ -190,16 +212,14 @@ if __name__ == "__main__":
             locator_methods = map_locators_to_methods(file_path, changed_locators)
             changed_methods.update(locator_methods)
 
-    # Find test files impacted by method/locator changes
+    # Find impacted tests by method usage
     method_matched_tests = find_tests_using_methods(repo_tests, changed_methods)
 
-    # Get AI suggestions
-    file_diffs = {f: get_file_diff(f) for f in changed_files}
-    raw_ai_output = ask_ai_for_tests(changed_files, file_diffs, repo_tests)
-    ai_selected_tests = parse_ai_selected_tests(raw_ai_output, repo_tests)
+    # Get AI-selected tests (directly, no extra parse function)
+    ai_selected_tests = ask_ai_for_tests(changed_files, file_diffs, repo_tests)
 
-    # Combine all tests and run
-    all_tests_to_run = list(set(method_matched_tests + ai_selected_tests))
+    # Combine all tests
+    all_tests_to_run = sorted(set(method_matched_tests + ai_selected_tests))
 
     if all_tests_to_run:
         logging.info(f"Running all impacted tests: {all_tests_to_run}")
