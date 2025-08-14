@@ -5,5 +5,10 @@
   "df23c974bb7b7eca5f2087c823d14a8b98d6ca9b": [
     "tests\\test_001_validate_username_password.py",
     "tests\\test_login.py"
+  ],
+  "d53172f09a68e2cd6aebd1e77f51b86a6fd75742": [
+    "tests/test_001_validate_username_password.py",
+    "tests/test_002_validate_waning_message.py",
+    "tests/test_login.py"
   ]
 }
