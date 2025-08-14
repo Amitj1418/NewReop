@@ -1,0 +1,12 @@
+{
+  "tests/test_002_validate_waning_message.py": {
+    "execution_times": [
+      27.32894206047058
+    ],
+    "success_rate": [
+      true
+    ],
+    "recent_failures": 0,
+    "total_runs": 1
+  }
+}

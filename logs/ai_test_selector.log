@@ -49,3 +49,16 @@
 2025-08-14 15:37:39 [INFO] Changed methods detected: {'validate_dashboard_page'}
 2025-08-14 15:37:39 [INFO] Changed locators detected: set()
 2025-08-14 15:41:46 [INFO] Running all impacted tests: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-14 16:27:48 [INFO] === Enhanced AI Test Selector Started ===
+2025-08-14 16:27:49 [INFO] Changed files: ['logs/ai_test_selector.log', 'tests/test_002_validate_waning_message.py']
+2025-08-14 16:27:49 [INFO] Detected 2 changed files: ['logs/ai_test_selector.log', 'tests/test_002_validate_waning_message.py']
+2025-08-14 16:27:49 [INFO] Changed methods detected: {'test_super_admin_warning_message'}
+2025-08-14 16:27:49 [INFO] Detected 1 changed methods: ['test_super_admin_warning_message']
+2025-08-14 16:27:49 [INFO] Changed locators detected: set()
+2025-08-14 16:27:49 [INFO] Found 3 test files in repository
+2025-08-14 16:27:49 [INFO] Added directly changed test files: ['tests/test_002_validate_waning_message.py']
+2025-08-14 16:27:49 [INFO] Added method-matched tests: ['tests/test_002_validate_waning_message.py']
+2025-08-14 16:27:49 [INFO] Final test selection (1 tests): ['tests/test_002_validate_waning_message.py']
+2025-08-14 16:27:49 [INFO] Test execution order: ['tests/test_002_validate_waning_message.py']
+2025-08-14 16:27:49 [INFO] Running test tests/test_002_validate_waning_message.py (attempt 1/2)
+2025-08-14 16:28:16 [INFO] Test execution completed in 27.61s, success: True
