@@ -33,5 +33,10 @@
   "10f43a808b32e274009aad9e7b52f2642a039c17": [
     "tests/test_001_validate_username_password.py",
     "tests/test_login.py"
+  ],
+  "e9332d85f8a0a71d386e7442b30e4d022c157541": [
+    "tests/test_001_validate_username_password.py",
+    "tests/test_002_validate_waning_message.py",
+    "tests/test_login.py"
   ]
 }

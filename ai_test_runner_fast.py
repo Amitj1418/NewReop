@@ -1,149 +1,123 @@
-# ai_test_runner_final.py
-import os
-import re
-import json
 import subprocess
+import os
 import logging
-from pathlib import Path
 import requests
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [INFO] %(message)s")
-
+# === CONFIG ===
+MODEL = "mistral"   # Ollama model name
 OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "llama3"
-CACHE_FILE = Path(".cache/ai_test_map.json")
-CACHE_FILE.parent.mkdir(exist_ok=True)
 
-# -------------------- Git Utilities -------------------- #
-def get_changed_files():
-    result = subprocess.run(["git", "diff", "--name-only", "HEAD~1"], capture_output=True, text=True)
-    return [f.strip() for f in result.stdout.splitlines() if f.strip().endswith(".py")]
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
 
-def get_git_diff(file_path):
+
+def run_git_cmd(args):
+    """Run a git command and return its output."""
     try:
         result = subprocess.run(
-            ["git", "diff", "HEAD~1", "--", file_path],
-            capture_output=True, text=True, encoding="utf-8", errors="replace"
+            ["git"] + args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True
         )
-        return result.stdout or ""
-    except Exception as e:
-        logging.error(f"Error getting diff for {file_path}: {e}")
+        return result.stdout.decode("utf-8", errors="ignore")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Git command failed: {e}")
         return ""
 
-def find_all_tests():
-    return [str(p.as_posix()) for p in Path("tests").rglob("test_*.py")]
 
-# -------------------- Diff Parsing -------------------- #
-def extract_methods_and_locators(diff_text):
-    methods = set()
-    locators = set()
+def get_changed_files():
+    """Get changed files from the last commit."""
+    output = run_git_cmd(["diff", "--name-only", "HEAD~1", "HEAD"])
+    files = [line.strip() for line in output.splitlines() if line.strip()]
+    logging.info(f"Changed files: {files}")
+    return files
 
-    # Method definitions and calls
-    methods.update(re.findall(r"def\s+(\w+)\s*\(", diff_text))
-    methods.update(re.findall(r"(\w+)\s*\(", diff_text))
 
-    # Direct XPath/CSS selectors
-    locators.update(re.findall(r"(//[^\s'\"]+|[.#][A-Za-z0-9_-]+)", diff_text))
-    # Locator variable names
-    locators.update(re.findall(r"([A-Z_]+)\s*=", diff_text))
+def get_diffs_for_changed_files(changed_files):
+    """Get full diffs for changed files."""
+    diffs = {}
+    for file_path in changed_files:
+        diff_output = run_git_cmd(["diff", "HEAD~1", "HEAD", "--", file_path])
+        if diff_output:
+            diffs[file_path] = diff_output
+    logging.info(f"Collected diffs for {len(diffs)} changed files.")
+    return diffs
 
-    return methods, locators
 
-# -------------------- Local Fallback -------------------- #
-def local_match_tests(methods, locators, repo_tests):
-    matched = set()
-    for test_file in repo_tests:
-        try:
-            content = Path(test_file).read_text(encoding="utf-8", errors="replace")
-        except:
-            continue
-        if any(m in content for m in methods) or any(l in content for l in locators):
-            matched.add(Path(test_file).as_posix())
-    return matched
+def get_all_test_files():
+    """Find all test files in repo."""
+    test_files = []
+    for root, _, files in os.walk("."):
+        for f in files:
+            if f.startswith("test_") and f.endswith(".py"):
+                test_files.append(os.path.join(root, f))
+    logging.info(f"Total test files found: {len(test_files)}")
+    return test_files
 
-# -------------------- AI Selector -------------------- #
-def ai_select_tests(methods, locators, repo_tests):
-    prompt = f"""
-    You are an AI test impact analyzer for a Python automation framework.
 
-    Rules:
-    1. If a method name or method definition changes (added, removed, or renamed), run the test containing it.
-    2. If any code inside a method changes, run all tests that reference or depend on that method.
-    3. If a locator value or its syntax changes, run all tests that use that locator variable or literal.
-    4. Always include all impacted tests — never skip a relevant test.
-
-    Changed methods: {list(methods)}
-    Changed locators: {list(locators)}
-
-    Available test files: {repo_tests}
-
-    Output format:
-    - One test file path per line
-    - Must exactly match from available test files
-    - No extra text or explanation
+def ai_select_tests(changed_files, diffs, repo_tests, model=MODEL):
     """
+    Fully AI-driven test selection using file diffs and repo test list.
+    """
+    prompt = f"""
+You are an AI test selector for a Python project.
+
+### Rules:
+1. You must ONLY pick test files from the AVAILABLE TEST FILES list.
+2. A test file should be selected if:
+   - It is directly changed.
+   - It uses a method or locator that was modified.
+   - A method it depends on had any code change inside.
+3. Consider changed methods, locators, and function names from the DIFFS.
+4. Output one matching test file path per line. No explanations.
+
+### CHANGED FILES:
+{changed_files}
+
+### DIFFS:
+{diffs}
+
+### AVAILABLE TEST FILES:
+{repo_tests}
+"""
+
     try:
         response = requests.post(
             OLLAMA_URL,
-            json={"model": MODEL, "prompt": prompt, "stream": False},
-            timeout=30
+            json={"model": model, "prompt": prompt, "stream": False},
         )
+        response.raise_for_status()
         output = response.json().get("response", "")
-        valid_tests = set(map(lambda p: Path(p).as_posix().strip(), repo_tests))
-        selected = {
-            Path(line.strip()).as_posix()
-            for line in output.splitlines()
-            if Path(line.strip()).as_posix() in valid_tests
-        }
+        selected = [line.strip() for line in output.splitlines() if line.strip()]
+        logging.info(f"AI selected tests: {selected}")
         return selected
     except Exception as e:
-        logging.error(f"AI request failed: {e}")
-        return set()
+        logging.error(f"AI test selection failed: {e}")
+        return []
 
-# -------------------- Cache -------------------- #
-def load_cache():
-    if CACHE_FILE.exists():
-        return json.loads(CACHE_FILE.read_text())
-    return {}
 
-def save_cache(cache):
-    CACHE_FILE.write_text(json.dumps(cache, indent=2))
-
-# -------------------- Main Runner -------------------- #
 def main():
     logging.info("=== Fully AI-Driven Test Runner Started ===")
 
-    commit_hash = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
-    cache = load_cache()
-
-    if commit_hash in cache:
-        logging.info(f"Using cached test selection for commit {commit_hash}")
-        tests_to_run = cache[commit_hash]
-    else:
-        changed_files = get_changed_files()
-        repo_tests = find_all_tests()
-        all_methods = set()
-        all_locators = set()
-
-        for file in changed_files:
-            diff_text = get_git_diff(file)
-            methods, locators = extract_methods_and_locators(diff_text)
-            all_methods.update(methods)
-            all_locators.update(locators)
-
-        ai_tests = ai_select_tests(all_methods, all_locators, repo_tests)
-        local_tests = local_match_tests(all_methods, all_locators, repo_tests)
-
-        tests_to_run = sorted(ai_tests.union(local_tests))
-        cache[commit_hash] = tests_to_run
-        save_cache(cache)
-
-    if not tests_to_run:
-        logging.info("No impacted tests found. Exiting.")
+    changed_files = get_changed_files()
+    if not changed_files:
+        logging.warning("No changed files detected.")
         return
 
-    logging.info(f"Running selected tests: {tests_to_run}")
-    os.system(f"pytest {' '.join(tests_to_run)}")
+    diffs = get_diffs_for_changed_files(changed_files)
+    repo_tests = get_all_test_files()
+
+    selected_tests = ai_select_tests(changed_files, diffs, repo_tests)
+
+    if selected_tests:
+        logging.info(f"Running selected tests: {selected_tests}")
+        os.system(f"pytest {' '.join(selected_tests)}")
+    else:
+        logging.warning("No tests selected by AI.")
+
 
 if __name__ == "__main__":
     main()
