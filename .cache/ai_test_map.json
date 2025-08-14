@@ -29,5 +29,9 @@
   ],
   "9e1bb2decee78f8bad692df0bd1e68738290745d": [
     "tests/test_001_validate_username_password.py"
+  ],
+  "10f43a808b32e274009aad9e7b52f2642a039c17": [
+    "tests/test_001_validate_username_password.py",
+    "tests/test_login.py"
   ]
 }
