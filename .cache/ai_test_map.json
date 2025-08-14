@@ -15,5 +15,10 @@
     "tests/test_001_validate_username_password.py",
     "tests/test_002_validate_waning_message.py",
     "tests/test_login.py"
+  ],
+  "a65a2ab65205f22624410c1a1e8fde53003dc23d": [
+    "tests/test_001_validate_username_password.py",
+    "tests/test_002_validate_waning_message.py",
+    "tests/test_login.py"
   ]
 }
