@@ -1,5 +1,6 @@
-# ai_test_runner_fast_complete_ai_only.py
+# ai_test_runner_final.py
 import os
+import re
 import json
 import subprocess
 import logging
@@ -13,62 +14,82 @@ MODEL = "llama3"
 CACHE_FILE = Path(".cache/ai_test_map.json")
 CACHE_FILE.parent.mkdir(exist_ok=True)
 
-
 # -------------------- Git Utilities -------------------- #
 def get_changed_files():
-    """Get all changed Python files in the last commit."""
-    result = subprocess.run(
-        ["git", "diff", "--name-only", "HEAD~1"],
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(["git", "diff", "--name-only", "HEAD~1"], capture_output=True, text=True)
     return [f.strip() for f in result.stdout.splitlines() if f.strip().endswith(".py")]
 
-
 def get_git_diff(file_path):
-    """Get the git diff for a given file."""
-    result = subprocess.run(
-        ["git", "diff", "HEAD~1", "--", file_path],
-        capture_output=True,
-        text=True
-    )
-    return result.stdout
-
+    try:
+        result = subprocess.run(
+            ["git", "diff", "HEAD~1", "--", file_path],
+            capture_output=True, text=True, encoding="utf-8", errors="replace"
+        )
+        return result.stdout or ""
+    except Exception as e:
+        logging.error(f"Error getting diff for {file_path}: {e}")
+        return ""
 
 def find_all_tests():
-    """Find all available test files in the repo."""
     return [str(p.as_posix()) for p in Path("tests").rglob("test_*.py")]
 
+# -------------------- Diff Parsing -------------------- #
+def extract_methods_and_locators(diff_text):
+    methods = set()
+    locators = set()
+
+    # Method definitions and calls
+    methods.update(re.findall(r"def\s+(\w+)\s*\(", diff_text))
+    methods.update(re.findall(r"(\w+)\s*\(", diff_text))
+
+    # Direct XPath/CSS selectors
+    locators.update(re.findall(r"(//[^\s'\"]+|[.#][A-Za-z0-9_-]+)", diff_text))
+    # Locator variable names
+    locators.update(re.findall(r"([A-Z_]+)\s*=", diff_text))
+
+    return methods, locators
+
+# -------------------- Local Fallback -------------------- #
+def local_match_tests(methods, locators, repo_tests):
+    matched = set()
+    for test_file in repo_tests:
+        try:
+            content = Path(test_file).read_text(encoding="utf-8", errors="replace")
+        except:
+            continue
+        if any(m in content for m in methods) or any(l in content for l in locators):
+            matched.add(Path(test_file).as_posix())
+    return matched
 
 # -------------------- AI Selector -------------------- #
-def ai_select_tests(diff_texts, repo_tests):
+def ai_select_tests(methods, locators, repo_tests):
     prompt = f"""
-You are an AI Python test impact analyzer.
+    You are an AI test impact analyzer for a Python automation framework.
 
-Recent CHANGES (from git diff):
-{diff_texts}
+    Rules:
+    1. If a method name or method definition changes (added, removed, or renamed), run the test containing it.
+    2. If any code inside a method changes, run all tests that reference or depend on that method.
+    3. If a locator value or its syntax changes, run all tests that use that locator variable or literal.
+    4. Always include all impacted tests — never skip a relevant test.
 
-AVAILABLE TEST FILES:
-{repo_tests}
+    Changed methods: {list(methods)}
+    Changed locators: {list(locators)}
 
-Selection Rules:
-1. If a method is added, removed, renamed, or its body changes → run all tests that use it.
-2. If any locator (XPath, CSS selector, variable holding locator) changes → run all tests that use it.
-3. If any method's code logic changes (even without name change) → run all tests linked to that method.
-4. Return ONLY the impacted test file paths, EXACTLY as they appear in the AVAILABLE TEST FILES list.
-5. Output ONE file path per line, no explanations, no extra text.
-"""
+    Available test files: {repo_tests}
 
+    Output format:
+    - One test file path per line
+    - Must exactly match from available test files
+    - No extra text or explanation
+    """
     try:
         response = requests.post(
             OLLAMA_URL,
             json={"model": MODEL, "prompt": prompt, "stream": False},
-            timeout=60
+            timeout=30
         )
         output = response.json().get("response", "")
-        valid_tests = set(Path(p).as_posix() for p in repo_tests)
-
-        # Only keep valid test files in final set
+        valid_tests = set(map(lambda p: Path(p).as_posix().strip(), repo_tests))
         selected = {
             Path(line.strip()).as_posix()
             for line in output.splitlines()
@@ -79,28 +100,20 @@ Selection Rules:
         logging.error(f"AI request failed: {e}")
         return set()
 
-
 # -------------------- Cache -------------------- #
 def load_cache():
     if CACHE_FILE.exists():
         return json.loads(CACHE_FILE.read_text())
     return {}
 
-
 def save_cache(cache):
     CACHE_FILE.write_text(json.dumps(cache, indent=2))
-
 
 # -------------------- Main Runner -------------------- #
 def main():
     logging.info("=== Fully AI-Driven Test Runner Started ===")
 
-    commit_hash = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        capture_output=True,
-        text=True
-    ).stdout.strip()
-
+    commit_hash = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     cache = load_cache()
 
     if commit_hash in cache:
@@ -108,26 +121,29 @@ def main():
         tests_to_run = cache[commit_hash]
     else:
         changed_files = get_changed_files()
-        if not changed_files:
-            logging.info("No changed Python files detected.")
-            return
-
         repo_tests = find_all_tests()
-        diff_texts = "\n\n".join(get_git_diff(f) for f in changed_files)
+        all_methods = set()
+        all_locators = set()
 
-        ai_tests = ai_select_tests(diff_texts, repo_tests)
+        for file in changed_files:
+            diff_text = get_git_diff(file)
+            methods, locators = extract_methods_and_locators(diff_text)
+            all_methods.update(methods)
+            all_locators.update(locators)
 
-        if not ai_tests:
-            logging.warning("AI did not select any tests — no tests will be run.")
-            return
+        ai_tests = ai_select_tests(all_methods, all_locators, repo_tests)
+        local_tests = local_match_tests(all_methods, all_locators, repo_tests)
 
-        tests_to_run = sorted(ai_tests)
+        tests_to_run = sorted(ai_tests.union(local_tests))
         cache[commit_hash] = tests_to_run
         save_cache(cache)
 
+    if not tests_to_run:
+        logging.info("No impacted tests found. Exiting.")
+        return
+
     logging.info(f"Running selected tests: {tests_to_run}")
     os.system(f"pytest {' '.join(tests_to_run)}")
-
 
 if __name__ == "__main__":
     main()
