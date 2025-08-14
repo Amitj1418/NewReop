@@ -78,3 +78,43 @@
 2025-08-14 16:31:27 [ERROR] Error output: 
 2025-08-14 16:31:27 [ERROR] Critical test tests/test_002_validate_waning_message.py failed, continuing with remaining tests...
 2025-08-14 16:31:27 [INFO] Test execution completed in 143.63s, success: False
+2025-08-14 16:32:09 [INFO] === Enhanced AI Test Selector Started ===
+2025-08-14 16:32:09 [INFO] Changed files: ['.test_execution_history.json', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-14 16:32:09 [INFO] Detected 3 changed files: ['.test_execution_history.json', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-14 16:32:09 [INFO] Changed methods detected: set()
+2025-08-14 16:32:09 [INFO] Detected 0 changed methods: []
+2025-08-14 16:32:10 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-14 16:32:10 [INFO] Found 3 test files in repository
+2025-08-14 16:32:10 [INFO] Added method-matched tests: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-14 16:32:10 [INFO] Final test selection (3 tests): ['tests/test_001_validate_username_password.py', 'tests/test_login.py', 'tests/test_002_validate_waning_message.py']
+2025-08-14 16:32:10 [INFO] Test execution order: ['tests/test_001_validate_username_password.py', 'tests/test_login.py', 'tests/test_002_validate_waning_message.py']
+2025-08-14 16:32:10 [INFO] Running test tests/test_001_validate_username_password.py (attempt 1/2)
+2025-08-14 16:32:24 [INFO] Running test tests/test_login.py (attempt 1/2)
+2025-08-14 16:33:02 [INFO] Running test tests/test_002_validate_waning_message.py (attempt 1/2)
+2025-08-14 16:34:07 [INFO] Running test tests/test_002_validate_waning_message.py (attempt 2/2)
+2025-08-14 16:35:11 [ERROR] Test tests/test_002_validate_waning_message.py failed after 2 attempts
+2025-08-14 16:35:11 [ERROR] Error output: 
+2025-08-14 16:35:11 [ERROR] Test tests/test_002_validate_waning_message.py failed
+2025-08-14 16:35:11 [INFO] Test execution completed in 181.35s, success: False
+2025-08-14 16:36:40 [INFO] === Enhanced AI Test Selector Started ===
+2025-08-14 16:36:40 [INFO] Changed files: ['.test_execution_history.json', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-14 16:36:40 [INFO] Detected 3 changed files: ['.test_execution_history.json', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-14 16:36:40 [INFO] Changed methods detected: set()
+2025-08-14 16:36:40 [INFO] Detected 0 changed methods: []
+2025-08-14 16:36:40 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-14 16:36:40 [INFO] Found 3 test files in repository
+2025-08-14 16:36:40 [INFO] Added method-matched tests: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-14 16:36:40 [INFO] Final test selection (3 tests): ['tests/test_001_validate_username_password.py', 'tests/test_login.py', 'tests/test_002_validate_waning_message.py']
+2025-08-14 16:36:40 [INFO] Test execution order: ['tests/test_001_validate_username_password.py', 'tests/test_login.py', 'tests/test_002_validate_waning_message.py']
+2025-08-14 16:36:40 [INFO] Running test tests/test_001_validate_username_password.py (attempt 1/2)
+2025-08-14 16:36:56 [INFO] Running test tests/test_login.py (attempt 1/2)
+2025-08-14 16:37:11 [INFO] Running test tests/test_002_validate_waning_message.py (attempt 1/2)
+2025-08-14 16:38:16 [INFO] Running test tests/test_002_validate_waning_message.py (attempt 2/2)
+2025-08-14 16:39:19 [ERROR] Test tests/test_002_validate_waning_message.py failed after 2 attempts
+2025-08-14 16:39:19 [ERROR] Error output: 
+2025-08-14 16:39:19 [ERROR] Test tests/test_002_validate_waning_message.py failed
+2025-08-14 16:39:19 [INFO] Test execution completed in 159.44s, success: False
+2025-08-14 17:09:54 [INFO] === Fully AI-Driven Test Runner v2 Started ===
+2025-08-14 17:09:54 [INFO] Changed methods detected: set()
+2025-08-14 17:09:54 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-14 17:18:55 [INFO] Running all impacted tests: ['tests/test_login.py', 'tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py']
