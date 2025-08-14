@@ -62,3 +62,19 @@
 2025-08-14 16:27:49 [INFO] Test execution order: ['tests/test_002_validate_waning_message.py']
 2025-08-14 16:27:49 [INFO] Running test tests/test_002_validate_waning_message.py (attempt 1/2)
 2025-08-14 16:28:16 [INFO] Test execution completed in 27.61s, success: True
+2025-08-14 16:29:03 [INFO] === Enhanced AI Test Selector Started ===
+2025-08-14 16:29:03 [INFO] Changed files: ['.test_execution_history.json', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-14 16:29:03 [INFO] Detected 3 changed files: ['.test_execution_history.json', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-14 16:29:03 [INFO] Changed methods detected: set()
+2025-08-14 16:29:03 [INFO] Detected 0 changed methods: []
+2025-08-14 16:29:03 [INFO] Changed locators detected: {'TOAST_MESSAGE_LOCATOR'}
+2025-08-14 16:29:03 [INFO] Found 3 test files in repository
+2025-08-14 16:29:03 [INFO] Added method-matched tests: ['tests/test_002_validate_waning_message.py']
+2025-08-14 16:29:03 [INFO] Final test selection (1 tests): ['tests/test_002_validate_waning_message.py']
+2025-08-14 16:29:03 [INFO] Test execution order: ['tests/test_002_validate_waning_message.py']
+2025-08-14 16:29:03 [INFO] Running test tests/test_002_validate_waning_message.py (attempt 1/2)
+2025-08-14 16:30:16 [INFO] Running test tests/test_002_validate_waning_message.py (attempt 2/2)
+2025-08-14 16:31:27 [ERROR] Test tests/test_002_validate_waning_message.py failed after 2 attempts
+2025-08-14 16:31:27 [ERROR] Error output: 
+2025-08-14 16:31:27 [ERROR] Critical test tests/test_002_validate_waning_message.py failed, continuing with remaining tests...
+2025-08-14 16:31:27 [INFO] Test execution completed in 143.63s, success: False
