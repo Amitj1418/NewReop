@@ -31,14 +31,16 @@
     "execution_times": [
       128.42594027519226,
       31.963582515716553,
-      18.030702352523804
+      18.030702352523804,
+      17.012969732284546
     ],
     "success_rate": [
       false,
       true,
+      true,
       true
     ],
     "recent_failures": 1,
-    "total_runs": 3
+    "total_runs": 4
   }
 }

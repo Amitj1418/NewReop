@@ -1,5 +1,6 @@
 # core/llm_helper.py
 import logging
+import re
 
 import requests
 
