@@ -21,3 +21,10 @@
 2025-08-13 19:23:35 [INFO] Running selected tests: ['tests/test_001_validate_username_password.py']
 2025-08-14 14:42:45 [INFO] === Fully AI-Driven Test Runner Started ===
 2025-08-14 14:45:14 [INFO] Running selected tests: ['tests/test_001_validate_username_password.py']
+2025-08-14 14:47:06 [INFO] === Fully AI-Driven Test Runner Started ===
+2025-08-14 14:49:03 [INFO] Running selected tests: ['tests/test_001_validate_username_password.py']
+2025-08-14 15:00:46 [INFO] === AI Test Selector Started ===
+2025-08-14 15:00:46 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py', 'pytest.ini']
+2025-08-14 15:00:46 [INFO] Changed methods detected: set()
+2025-08-14 15:00:46 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-14 15:00:46 [INFO] Running tests that reference changed methods: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
