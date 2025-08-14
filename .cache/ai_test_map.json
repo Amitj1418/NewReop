@@ -1,5 +1,9 @@
 {
   "35a8434d948138f7aab2af479c745fed8a0149e7": [
     "tests\\test_001_validate_username_password.py"
+  ],
+  "df23c974bb7b7eca5f2087c823d14a8b98d6ca9b": [
+    "tests\\test_001_validate_username_password.py",
+    "tests\\test_login.py"
   ]
 }
