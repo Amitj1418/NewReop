@@ -28,3 +28,7 @@
 2025-08-14 15:00:46 [INFO] Changed methods detected: set()
 2025-08-14 15:00:46 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
 2025-08-14 15:00:46 [INFO] Running tests that reference changed methods: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-14 15:05:12 [INFO] === Fully AI-Driven Test Runner v2 Started ===
+2025-08-14 15:05:13 [INFO] Changed methods detected: {'get_all_test_files', 'parse_ai_selected_tests', 'get_changed_locators', 'get_changed_files', 'ask_ai_for_tests', 'run_git_cmd', 'find_tests_using_methods', 'get_file_diff', 'map_locators_to_methods', 'get_changed_methods'}
+2025-08-14 15:05:13 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-14 15:15:02 [INFO] Running all impacted tests: ['tests/test_login.py', 'tests/test_002_validate_waning_message.py', 'tests/test_001_validate_username_password.py']
