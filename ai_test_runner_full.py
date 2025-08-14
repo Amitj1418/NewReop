@@ -39,20 +39,31 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL = "mistral"
 
 # -----------------------------
-# Git helpers
+# Git helpers (UTF-8 safe)
 # -----------------------------
 def run_git_cmd(cmd):
     try:
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                text=True, check=True)
-        return result.stdout.strip()
-    except subprocess.CalledProcessError as e:
-        logging.error(f"Git command failed: {e.stderr}")
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",    # Force UTF-8
+            errors="replace"     # Replace invalid chars instead of crashing
+        )
+        return (result.stdout or "").strip()
+    except Exception as e:
+        logging.error(f"Git command failed: {cmd} -> {e}")
         return ""
 
 def get_changed_files():
     result = run_git_cmd(["git", "diff", "--name-only", "HEAD~1"])
-    return [f.strip() for f in result.splitlines() if f.strip()]
+    files = [f.strip() for f in result.splitlines() if f.strip()]
+    # Filter out irrelevant files (logs, docs, etc.)
+    files = [
+        f for f in files
+        if not (f.startswith("logs/") or f.endswith(".md") or f.endswith(".txt"))
+    ]
+    return files
 
 def get_file_diff(file_path):
     return run_git_cmd(["git", "diff", "HEAD~1", "--", file_path])
@@ -184,7 +195,7 @@ def ask_ai_for_tests(changed_files, file_diffs, repo_tests):
 # Main
 # -----------------------------
 if __name__ == "__main__":
-    logging.info("=== Fully AI-Driven Test Runner v3 (Improved) Started ===")
+    logging.info("=== Fully AI-Driven Test Runner v3 (UTF-8 Safe) Started ===")
 
     changed_files = get_changed_files()
     if not changed_files:
