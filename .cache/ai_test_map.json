@@ -26,5 +26,8 @@
   ],
   "b012fa460da6c0f26b2e30114c0e77168b190f0b": [
     "tests/test_002_validate_waning_message.py"
+  ],
+  "9e1bb2decee78f8bad692df0bd1e68738290745d": [
+    "tests/test_001_validate_username_password.py"
   ]
 }

@@ -14,7 +14,7 @@ class CheckoutPage:
     EMAIL_TEXT_INPUT_LOCATOR = "//input[@placeholder='Email']"
     PASSWORD_TEXT_INPUT_LOCATOR = "//input[@type='password']"
     LOGIN_BUTTON_LOCATOR = "//button[@type='submit']"
-    SUPER_ADMIN_LINK_LOCATOR = "//div[@class='mat-tab-label-content' and text()='Super Admin']"
+    SUPER_ADMIN_LINK_LOCATOR = "//div[@class='mat-tab-label-content' and text()='Super Admins']"
     HOSPITAL_USER_LINK_LOCATOR = "//div[@class='mat-tab-label-content' and text()='Hospital User']"
     TOAST_MESSAGE_LOCATOR = "//div[@aria-label='Invalid Email or Passwords']"
     USERNAME_LABEL_LOCATOR = "//span[@class='user-name']"
