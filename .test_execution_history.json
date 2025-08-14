@@ -1,32 +1,44 @@
 {
   "tests/test_001_validate_username_password.py": {
     "execution_times": [
-      15.651756525039673
+      15.651756525039673,
+      19.703686475753784,
+      17.490845918655396
     ],
     "success_rate": [
+      true,
+      true,
       true
     ],
     "recent_failures": 0,
-    "total_runs": 1
+    "total_runs": 3
   },
   "tests/test_login.py": {
     "execution_times": [
-      14.919729471206665
+      14.919729471206665,
+      18.8035671710968,
+      18.79717516899109
     ],
     "success_rate": [
+      true,
+      true,
       true
     ],
     "recent_failures": 0,
-    "total_runs": 1
+    "total_runs": 3
   },
   "tests/test_002_validate_waning_message.py": {
     "execution_times": [
-      128.42594027519226
+      128.42594027519226,
+      31.963582515716553,
+      18.030702352523804
     ],
     "success_rate": [
-      false
+      false,
+      true,
+      true
     ],
     "recent_failures": 1,
-    "total_runs": 1
+    "total_runs": 3
   }
 }

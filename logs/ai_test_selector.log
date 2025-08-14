@@ -118,3 +118,33 @@
 2025-08-14 17:09:54 [INFO] Changed methods detected: set()
 2025-08-14 17:09:54 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
 2025-08-14 17:18:55 [INFO] Running all impacted tests: ['tests/test_login.py', 'tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py']
+2025-08-14 18:00:54 [INFO] === Enhanced AI Test Selector Started ===
+2025-08-14 18:00:54 [INFO] Changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-14 18:00:54 [INFO] Detected 2 changed files: ['logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-14 18:00:54 [INFO] Changed methods detected: set()
+2025-08-14 18:00:54 [INFO] Detected 0 changed methods: []
+2025-08-14 18:00:54 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-14 18:00:54 [INFO] Found 3 test files in repository
+2025-08-14 18:00:54 [INFO] Added method-matched tests: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-14 18:00:54 [INFO] Final test selection (3 tests): ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-14 18:00:54 [INFO] Test execution order: ['tests/test_002_validate_waning_message.py', 'tests/test_login.py', 'tests/test_001_validate_username_password.py']
+2025-08-14 18:00:54 [INFO] Running test tests/test_002_validate_waning_message.py (attempt 1/2)
+2025-08-14 18:01:26 [INFO] Running test tests/test_login.py (attempt 1/2)
+2025-08-14 18:01:45 [INFO] Running test tests/test_001_validate_username_password.py (attempt 1/2)
+2025-08-14 18:02:05 [INFO] Test tests/test_001_validate_username_password.py passed in 19.70s
+2025-08-14 18:02:05 [INFO] Test execution completed in 70.71s, success: True
+2025-08-14 18:11:00 [INFO] === Enhanced AI Test Selector Started ===
+2025-08-14 18:11:00 [INFO] Changed files: ['.test_execution_history.json', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-14 18:11:00 [INFO] Detected 3 changed files: ['.test_execution_history.json', 'logs/ai_test_selector.log', 'pages/checkout_page.py']
+2025-08-14 18:11:01 [INFO] Changed methods detected: set()
+2025-08-14 18:11:01 [INFO] Detected 0 changed methods: []
+2025-08-14 18:11:01 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-14 18:11:01 [INFO] Found 3 test files in repository
+2025-08-14 18:11:01 [INFO] Added method-matched tests: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-14 18:11:01 [INFO] Final test selection (3 tests): ['tests/test_002_validate_waning_message.py', 'tests/test_001_validate_username_password.py', 'tests/test_login.py']
+2025-08-14 18:11:01 [INFO] Test execution order: ['tests/test_002_validate_waning_message.py', 'tests/test_login.py', 'tests/test_001_validate_username_password.py']
+2025-08-14 18:11:01 [INFO] Running test tests/test_002_validate_waning_message.py (attempt 1/2)
+2025-08-14 18:11:19 [INFO] Running test tests/test_login.py (attempt 1/2)
+2025-08-14 18:11:37 [INFO] Running test tests/test_001_validate_username_password.py (attempt 1/2)
+2025-08-14 18:11:55 [INFO] Test tests/test_001_validate_username_password.py passed in 17.49s
+2025-08-14 18:11:55 [INFO] Test execution completed in 54.65s, success: True
