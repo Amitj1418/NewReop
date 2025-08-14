@@ -23,5 +23,8 @@
   ],
   "64585d054db0b6b1ab3bda83d714464d9b2683d8": [
     "tests/test_login.py"
+  ],
+  "b012fa460da6c0f26b2e30114c0e77168b190f0b": [
+    "tests/test_002_validate_waning_message.py"
   ]
 }
