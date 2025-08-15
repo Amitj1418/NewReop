@@ -47,8 +47,8 @@ def run_git_cmd(cmd):
             cmd,
             capture_output=True,
             text=True,
-            encoding="utf-8",  # Force UTF-8
-            errors="replace"  # Replace invalid chars instead of crashing
+            encoding="utf-8",
+            errors="replace"
         )
         return (result.stdout or "").strip()
     except Exception as e:
@@ -58,22 +58,24 @@ def run_git_cmd(cmd):
 
 def get_changed_files():
     try:
-        # Detect if running in GitHub Actions
         is_ci = os.getenv("GITHUB_ACTIONS", "").lower() == "true"
 
         if is_ci:
-            # In CI: fetch base branch and compare
-            base_branch = os.getenv("GITHUB_BASE_REF", "main")  # main or develop
+            base_branch = os.getenv("GITHUB_BASE_REF", "main")
             subprocess.run(["git", "fetch", "--unshallow"], check=False)
             subprocess.run(["git", "fetch", "origin", base_branch], check=False)
             cmd = ["git", "diff", "--name-only", f"origin/{base_branch}...HEAD"]
         else:
-            # Local: just compare with last commit
-            cmd = ["git", "diff", "--name-only", "HEAD~1"]
+            # Local: try comparing with upstream branch first
+            upstream_branch = run_git_cmd(["git", "rev-parse", "--abbrev-ref", "@{u}"])
+            if upstream_branch:
+                cmd = ["git", "diff", "--name-only", "@{u}...HEAD"]
+            else:
+                logging.warning("No upstream branch set. Falling back to last commit comparison.")
+                cmd = ["git", "diff", "--name-only", "HEAD~1"]
 
         result = run_git_cmd(cmd)
         files = [f.strip() for f in result.splitlines() if f.strip()]
-        # Filter out irrelevant files
         files = [
             f for f in files
             if not (f.startswith("logs/") or f.endswith(".md") or f.endswith(".txt"))
@@ -205,7 +207,6 @@ def ask_ai_for_tests(changed_files, file_diffs, repo_tests):
             if clean_line in repo_set:
                 selected.append(clean_line)
 
-        # Cap AI selection
         max_allowed = max(5, len(changed_files) * 3)
         if len(selected) > max_allowed:
             logging.warning(f"AI selected {len(selected)} tests — trimming to {max_allowed}.")
@@ -222,7 +223,7 @@ def ask_ai_for_tests(changed_files, file_diffs, repo_tests):
 # Main
 # -----------------------------
 if __name__ == "__main__":
-    logging.info("=== Fully AI-Driven Test Runner v3 (UTF-8 Safe) Started ===")
+    logging.info("=== Fully AI-Driven Test Runner v2 (UTF-8 Safe, Improved Git Detection) Started ===")
 
     changed_files = get_changed_files()
     if not changed_files:
@@ -234,26 +235,19 @@ if __name__ == "__main__":
         logging.warning("No test files found. Exiting.")
         exit(0)
 
-    # Cache diffs once
     file_diffs = {f: get_file_diff(f) for f in changed_files}
 
-    # Detect changed methods and locators
     changed_methods = get_changed_methods(changed_files, file_diffs)
     changed_locators = get_changed_locators(changed_files, file_diffs)
 
-    # Map locators to methods
     for file_path in changed_files:
         if changed_locators and file_path.endswith(".py"):
             locator_methods = map_locators_to_methods(file_path, changed_locators)
             changed_methods.update(locator_methods)
 
-    # Find impacted tests by method usage
     method_matched_tests = find_tests_using_methods(repo_tests, changed_methods)
-
-    # AI-selected tests
     ai_selected_tests = ask_ai_for_tests(changed_files, file_diffs, repo_tests)
 
-    # Merge results: method matches get priority
     all_tests_to_run = sorted(set(method_matched_tests) | set(ai_selected_tests))
 
     if all_tests_to_run:
