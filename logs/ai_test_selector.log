@@ -1,0 +1,4 @@
+2025-08-14 20:49:49 [INFO] === Fully AI-Driven Test Runner v3 (UTF-8 Safe) Started ===
+2025-08-14 20:49:49 [INFO] Changed methods detected: {'validate_dashboard_page'}
+2025-08-14 20:49:49 [INFO] Changed locators detected: set()
+2025-08-14 20:50:39 [INFO] Running impacted tests: ['tests/test_001_validate_username_password.py', 'tests/test_login.py']
