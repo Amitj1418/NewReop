@@ -1,4 +1,0 @@
-playwright
-pytest
-pyyaml
-openai
