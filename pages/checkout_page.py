@@ -50,11 +50,7 @@ class CheckoutPage:
 
     def validate_dashboard_page(self):
         self.wait_for_locator(self.USERNAME_LABEL_LOCATOR)
-
-
-
-
-
+        self.wait_for_locator(self.USERNAME_LABEL_LOCATOR)
 
 
     def assert_toast_contains(self, expected_text: str):
