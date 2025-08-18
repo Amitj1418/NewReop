@@ -20,3 +20,9 @@
 2025-08-18 16:05:04 [INFO] Impacted tests identified: ['tests/test_login.py']
 2025-08-18 16:05:04 [INFO] Saved impacted tests to impacted_tests.txt
 2025-08-18 16:05:04 [INFO] Running impacted tests locally...
+2025-08-18 16:09:08 [INFO] === Fully AI-Driven Test Runner v2 (UTF-8 Safe, Corrected) Started ===
+2025-08-18 16:09:08 [INFO] Changed methods detected: set()
+2025-08-18 16:09:08 [INFO] Changed locators detected: {'SUPER_ADMIN_LINK_LOCATOR'}
+2025-08-18 16:10:10 [INFO] Impacted tests identified: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_login.py']
+2025-08-18 16:10:10 [INFO] Saved impacted tests to impacted_tests.txt
+2025-08-18 16:10:10 [INFO] Running impacted tests locally...
