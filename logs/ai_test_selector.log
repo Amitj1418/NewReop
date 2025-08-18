@@ -12,3 +12,5 @@
 2025-08-18 15:41:17 [INFO] Impacted tests identified: ['tests/test_002_validate_waning_message.py']
 2025-08-18 15:41:17 [INFO] Saved impacted tests to impacted_tests.txt
 2025-08-18 15:41:17 [INFO] Running impacted tests locally...
+2025-08-18 15:43:20 [INFO] === Fully AI-Driven Test Runner v3 (UTF-8 Safe) Started ===
+2025-08-18 15:43:20 [INFO] No changed files detected. Exiting.
