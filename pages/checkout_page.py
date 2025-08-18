@@ -14,7 +14,7 @@ class CheckoutPage:
     EMAIL_TEXT_INPUT_LOCATOR = "//input[@placeholder='Email']"
     PASSWORD_TEXT_INPUT_LOCATOR = "//input[@type='password']"
     LOGIN_BUTTON_LOCATOR = "//button[@type='submit']"
-    SUPER_ADMIN_LINK_LOCATOR = "//div[@class='mat-tab-label-content' and text()='Super Admin']"
+    SUPER_ADMIN_LINK_LOCATOR = "//div[@class='mat-tab-label-content' and text()='Super Admins']"
     HOSPITAL_USER_LINK_LOCATOR = "//div[@class='mat-tab-label-content' and text()='Hospital User']"
     TOAST_MESSAGE_LOCATOR = "//div[@aria-label='Invalid Email or Password']"
     USERNAME_LABEL_LOCATOR = "//span[@class='user-name']"
@@ -49,6 +49,7 @@ class CheckoutPage:
         return actual_url == expected_url
 
     def validate_dashboard_page(self):
+        self.wait_for_locator(self.USERNAME_LABEL_LOCATOR)
         self.wait_for_locator(self.USERNAME_LABEL_LOCATOR)
 
 
