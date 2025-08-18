@@ -14,3 +14,9 @@
 2025-08-18 15:41:17 [INFO] Running impacted tests locally...
 2025-08-18 15:43:20 [INFO] === Fully AI-Driven Test Runner v3 (UTF-8 Safe) Started ===
 2025-08-18 15:43:20 [INFO] No changed files detected. Exiting.
+2025-08-18 16:03:34 [INFO] === Fully AI-Driven Test Runner v2 (UTF-8 Safe, Corrected) Started ===
+2025-08-18 16:03:34 [INFO] Changed methods detected: set()
+2025-08-18 16:03:34 [INFO] Changed locators detected: set()
+2025-08-18 16:05:04 [INFO] Impacted tests identified: ['tests/test_login.py']
+2025-08-18 16:05:04 [INFO] Saved impacted tests to impacted_tests.txt
+2025-08-18 16:05:04 [INFO] Running impacted tests locally...
