@@ -252,19 +252,18 @@ if __name__ == "__main__":
     all_tests_to_run = sorted(set(method_matched_tests) | set(ai_selected_tests))
 
     if all_tests_to_run:
-        logging.info(f"Running impacted tests: {all_tests_to_run}")
-        os.system(f"pytest {' '.join(all_tests_to_run)}")
-    else:
-        logging.warning("No impacted test files found. Exiting.")
+        logging.info(f"Impacted tests identified: {all_tests_to_run}")
 
-    output_file = "impacted_tests.txt"
-
-    if all_tests_to_run:
-        logging.info(f"Impacted tests written to {output_file}: {all_tests_to_run}")
-        with open(output_file, "w", encoding="utf-8") as f:
+        # Save impacted tests into a file
+        with open("impacted_tests.txt", "w", encoding="utf-8") as f:
             for test in all_tests_to_run:
                 f.write(test + "\n")
+
+        logging.info("Saved impacted tests to impacted_tests.txt")
+
+        # Run them locally only (skip on GitHub CI)
+        if os.getenv("GITHUB_ACTIONS", "").lower() != "true":
+            logging.info("Running impacted tests locally...")
+            os.system(f"pytest {' '.join(all_tests_to_run)}")
     else:
-        logging.warning("No impacted test files found. Writing empty list.")
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write("")
+        logging.warning("No impacted test files found. Exiting.")
