@@ -26,6 +26,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run AI-driven impacted tests
+      - name: Run impacted tests from file
         run: |
-          python ai_test_runner_full_2.py
+          if [ -s impacted_tests.txt ]; then
+            echo "Running impacted tests..."
+            pytest $(cat impacted_tests.txt)
+          else
+            echo "No impacted tests found. Skipping."
+          fi
