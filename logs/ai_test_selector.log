@@ -99,3 +99,7 @@
 2025-08-18 15:14:52 [INFO] Changed methods detected: {'map_locators_to_methods', 'ask_ai_for_tests', 'get_file_diff', 'run_git_cmd', 'get_all_test_files', 'get_changed_locators', 'find_tests_using_methods', 'get_changed_files', 'get_changed_methods'}
 2025-08-18 15:14:52 [INFO] Changed locators detected: set()
 2025-08-18 15:26:13 [WARNING] No impacted test files found. Exiting.
+2025-08-18 15:28:46 [INFO] === Fully AI-Driven Test Runner v3 (UTF-8 Safe) Started ===
+2025-08-18 15:28:46 [INFO] Changed methods detected: set()
+2025-08-18 15:28:46 [INFO] Changed locators detected: set()
+2025-08-18 15:30:20 [INFO] Running impacted tests: ['tests/test_login.py']
