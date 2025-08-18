@@ -62,11 +62,12 @@ def get_changed_files():
 
         if is_ci:
             base_branch = os.getenv("GITHUB_BASE_REF", "main")
-            subprocess.run(["git", "fetch", "--unshallow"], check=False)
+            # Avoid error: --unshallow on full clone
+            subprocess.run(["git", "fetch", "--prune", "--depth=50"], check=False)
             subprocess.run(["git", "fetch", "origin", base_branch], check=False)
             cmd = ["git", "diff", "--name-only", f"origin/{base_branch}...HEAD"]
         else:
-            # Local: try comparing with upstream branch first
+            # Local run
             upstream_branch = run_git_cmd(["git", "rev-parse", "--abbrev-ref", "@{u}"])
             if upstream_branch:
                 cmd = ["git", "diff", "--name-only", "@{u}...HEAD"]
@@ -223,7 +224,7 @@ def ask_ai_for_tests(changed_files, file_diffs, repo_tests):
 # Main
 # -----------------------------
 if __name__ == "__main__":
-    logging.info("=== Fully AI-Driven Test Runner v2 (UTF-8 Safe, Improved Git Detection) Started ===")
+    logging.info("=== Fully AI-Driven Test Runner v2 (UTF-8 Safe, Corrected) Started ===")
 
     changed_files = get_changed_files()
     if not changed_files:
