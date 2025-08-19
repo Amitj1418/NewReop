@@ -102,17 +102,35 @@ def get_all_test_files(test_dir="tests"):
     return all_tests
 
 
-def get_new_test_files(changed_files, repo_tests):
+def get_new_tests(changed_files, repo_tests):
     """
-    Detect test files that were newly added in the commit.
+    Detect newly added test files and newly added test functions in existing files.
     """
     new_tests = []
+
     for f in changed_files:
-        if f in repo_tests and f.startswith("tests/"):
-            diff = get_file_diff(f)
-            if diff.startswith("diff --git") and "new file mode" in diff:
-                new_tests.append(f)
-    logging.info(f"New test files detected: {new_tests}")
+        if not f.startswith("tests/") or not f.endswith(".py"):
+            continue
+
+        diff = get_file_diff(f)
+
+        # Case 1: Entirely new test file
+        if f in repo_tests and "new file mode" in diff:
+            new_tests.append(f)
+            continue
+
+        # Case 2: New test functions added in an existing file
+        added_test_funcs = []
+        for line in diff.splitlines():
+            match = re.match(r'^\+\s*def\s+(test_[a-zA-Z0-9_]+)\s*\(', line)
+            if match:
+                added_test_funcs.append(match.group(1))
+
+        if added_test_funcs:
+            new_tests.append(f)
+            logging.info(f"New test functions detected in {f}: {added_test_funcs}")
+
+    logging.info(f"New tests detected: {new_tests}")
     return new_tests
 
 
@@ -260,7 +278,7 @@ if __name__ == "__main__":
 
     method_matched_tests = find_tests_using_methods(repo_tests, changed_methods)
     ai_selected_tests = ask_ai_for_tests(changed_files, file_diffs, repo_tests)
-    new_test_files = get_new_test_files(changed_files, repo_tests)
+    new_test_files = get_new_tests(changed_files, repo_tests)
 
     all_tests_to_run = sorted(
         set(method_matched_tests) | set(ai_selected_tests) | set(new_test_files)
