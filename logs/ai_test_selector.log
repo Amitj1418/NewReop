@@ -62,3 +62,9 @@
 2025-08-19 18:58:49 [INFO] Impacted tests identified: ['tests/test_001_validate_username_password.py', 'tests/test_002_validate_waning_message.py', 'tests/test_003_validate_username_password_hospital_user.py', 'tests/test_login.py']
 2025-08-19 18:58:49 [INFO] Saved impacted tests to impacted_tests.txt
 2025-08-19 18:58:49 [INFO] Running impacted tests locally...
+2025-08-19 19:17:33 [INFO] === Fully AI-Driven Test Runner v2 (UTF-8 Safe, Corrected) Started ===
+2025-08-19 19:17:33 [INFO] Changed methods detected: {'test_valid_login_hospital_user'}
+2025-08-19 19:17:33 [INFO] Changed locators detected: {'TOAST_MESSAGE_LOCATOR'}
+2025-08-19 19:19:11 [INFO] Impacted tests identified: ['tests/test_002_validate_waning_message.py', 'tests/test_003_validate_username_password_hospital_user.py']
+2025-08-19 19:19:11 [INFO] Saved impacted tests to impacted_tests.txt
+2025-08-19 19:19:11 [INFO] Running impacted tests locally...
