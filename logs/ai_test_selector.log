@@ -152,3 +152,9 @@
 2025-08-19 21:02:34 [INFO] Changed methods detected: set()
 2025-08-19 21:02:34 [INFO] Changed locators detected: set()
 2025-08-19 21:03:02 [WARNING] No impacted test files found. Exiting.
+2025-08-19 21:04:08 [INFO] === Fully AI-Driven Test Runner v2 (UTF-8 Safe, Corrected) Started ===
+2025-08-19 21:04:08 [INFO] Changed methods detected: {'test_valid_login_hospital_user'}
+2025-08-19 21:04:08 [INFO] Changed locators detected: set()
+2025-08-19 21:04:46 [INFO] Impacted tests identified: ['tests/test_003_validate_username_password_hospital_user.py']
+2025-08-19 21:04:46 [INFO] Saved impacted tests to impacted_tests.txt
+2025-08-19 21:04:46 [INFO] Running impacted tests locally...
