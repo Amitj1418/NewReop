@@ -98,3 +98,8 @@
 2025-08-19 20:26:35 [INFO] Changed locators detected: set()
 2025-08-19 20:27:20 [INFO] New test files detected: []
 2025-08-19 20:27:20 [WARNING] No impacted test files found. Exiting.
+2025-08-19 20:34:24 [INFO] === Fully AI-Driven Test Runner v3 (with new test detection) Started ===
+2025-08-19 20:34:24 [INFO] Changed methods detected: {'get_new_tests'}
+2025-08-19 20:34:24 [INFO] Changed locators detected: set()
+2025-08-19 20:37:07 [INFO] New tests detected: []
+2025-08-19 20:37:07 [WARNING] No impacted test files found. Exiting.
