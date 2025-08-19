@@ -74,3 +74,8 @@
 2025-08-19 19:20:07 [INFO] Impacted tests identified: ['tests/test_003_validate_username_password_hospital_user.py']
 2025-08-19 19:20:07 [INFO] Saved impacted tests to impacted_tests.txt
 2025-08-19 19:20:07 [INFO] Running impacted tests locally...
+2025-08-19 19:32:26 [INFO] === Fully AI-Driven Test Runner v3 (with new test detection) Started ===
+2025-08-19 19:32:26 [INFO] Changed methods detected: {'get_file_diff', 'find_tests_using_methods', 'get_new_test_files', 'ask_ai_for_tests', 'get_all_test_files', 'get_changed_methods', 'get_changed_files', 'map_locators_to_methods', 'get_changed_locators', 'run_git_cmd'}
+2025-08-19 19:32:26 [INFO] Changed locators detected: set()
+2025-08-19 19:43:24 [INFO] New test files detected: []
+2025-08-19 19:43:24 [WARNING] No impacted test files found. Exiting.
