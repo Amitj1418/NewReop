@@ -114,9 +114,10 @@ def get_new_tests(changed_files, repo_tests):
 
         diff = get_file_diff(f)
 
-        # Case 1: Entirely new test file
-        if f in repo_tests and "new file mode" in diff:
+        # Case 1: Entirely new test file (not in repo_tests yet, and Git diff marks it as new)
+        if f not in repo_tests and "new file mode" in diff:
             new_tests.append(f)
+            logging.info(f"New test file detected: {f}")
             continue
 
         # Case 2: New test functions added in an existing file
