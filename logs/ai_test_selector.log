@@ -46,3 +46,9 @@
 2025-08-19 18:33:47 [INFO] Changed methods detected: set()
 2025-08-19 18:33:47 [INFO] Changed locators detected: set()
 2025-08-19 18:34:39 [WARNING] No impacted test files found. Exiting.
+2025-08-19 18:38:53 [INFO] === Fully AI-Driven Test Runner v2 (UTF-8 Safe, Corrected) Started ===
+2025-08-19 18:38:53 [INFO] Changed methods detected: {'validate_dashboard_page'}
+2025-08-19 18:38:53 [INFO] Changed locators detected: set()
+2025-08-19 18:39:42 [INFO] Impacted tests identified: ['tests/test_001_validate_username_password.py', 'tests/test_login.py']
+2025-08-19 18:39:42 [INFO] Saved impacted tests to impacted_tests.txt
+2025-08-19 18:39:42 [INFO] Running impacted tests locally...
