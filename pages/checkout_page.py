@@ -27,10 +27,9 @@ class CheckoutPage:
         self.base_page_instance.smart_fill("Password", self.PASSWORD_TEXT_INPUT_LOCATOR, password)
         self.base_page_instance.smart_click("Login", self.LOGIN_BUTTON_LOCATOR)
 
-    def login_with_hospital_user(self, username, password):
+    def login_with_hospital_user(self, username):
         self.base_page_instance.smart_click("Hospital User", self.HOSPITAL_USER_LINK_LOCATOR)
         self.base_page_instance.smart_fill("Email", self.EMAIL_TEXT_INPUT_LOCATOR, username)
-        self.base_page_instance.smart_fill("Password", self.PASSWORD_TEXT_INPUT_LOCATOR, password)
         self.base_page_instance.smart_click("Login", self.LOGIN_BUTTON_LOCATOR)
 
 
@@ -70,3 +69,5 @@ class CheckoutPage:
         except Exception as e:
             print(f"⚠️ Locator '{selector}' not visible within {timeout}ms. Error: {e}")
             return False
+
+
