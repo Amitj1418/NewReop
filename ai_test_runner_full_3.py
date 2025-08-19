@@ -62,10 +62,12 @@ def get_changed_files():
 
         if is_ci:
             base_branch = os.getenv("GITHUB_BASE_REF", "main")
+            # Avoid error: --unshallow on full clone
             subprocess.run(["git", "fetch", "--prune", "--depth=50"], check=False)
             subprocess.run(["git", "fetch", "origin", base_branch], check=False)
             cmd = ["git", "diff", "--name-only", f"origin/{base_branch}...HEAD"]
         else:
+            # Local run
             upstream_branch = run_git_cmd(["git", "rev-parse", "--abbrev-ref", "@{u}"])
             if upstream_branch:
                 cmd = ["git", "diff", "--name-only", "@{u}...HEAD"]
@@ -100,39 +102,6 @@ def get_all_test_files(test_dir="tests"):
             if f.startswith("test_") and f.endswith(".py"):
                 all_tests.append(os.path.join(root, f).replace("\\", "/"))
     return all_tests
-
-
-def get_new_tests(changed_files, repo_tests):
-    """
-    Detect newly added test files and newly added test functions in existing files.
-    """
-    new_tests = []
-
-    for f in changed_files:
-        if not f.startswith("tests/") or not f.endswith(".py"):
-            continue
-
-        diff = get_file_diff(f)
-
-        # Case 1: Entirely new test file (not in repo_tests yet, and Git diff marks it as new)
-        if f not in repo_tests and "new file mode" in diff:
-            new_tests.append(f)
-            logging.info(f"New test file detected: {f}")
-            continue
-
-        # Case 2: New test functions added in an existing file
-        added_test_funcs = []
-        for line in diff.splitlines():
-            match = re.match(r'^\+\s*def\s+(test_[a-zA-Z0-9_]+)\s*\(', line)
-            if match:
-                added_test_funcs.append(match.group(1))
-
-        if added_test_funcs:
-            new_tests.append(f)
-            logging.info(f"New test functions detected in {f}: {added_test_funcs}")
-
-    logging.info(f"New tests detected: {new_tests}")
-    return new_tests
 
 
 # -----------------------------
@@ -255,7 +224,7 @@ def ask_ai_for_tests(changed_files, file_diffs, repo_tests):
 # Main
 # -----------------------------
 if __name__ == "__main__":
-    logging.info("=== Fully AI-Driven Test Runner v3 (with new test detection) Started ===")
+    logging.info("=== Fully AI-Driven Test Runner v2 (UTF-8 Safe, Corrected) Started ===")
 
     changed_files = get_changed_files()
     if not changed_files:
@@ -279,21 +248,20 @@ if __name__ == "__main__":
 
     method_matched_tests = find_tests_using_methods(repo_tests, changed_methods)
     ai_selected_tests = ask_ai_for_tests(changed_files, file_diffs, repo_tests)
-    new_test_files = get_new_tests(changed_files, repo_tests)
 
-    all_tests_to_run = sorted(
-        set(method_matched_tests) | set(ai_selected_tests) | set(new_test_files)
-    )
+    all_tests_to_run = sorted(set(method_matched_tests) | set(ai_selected_tests))
 
     if all_tests_to_run:
         logging.info(f"Impacted tests identified: {all_tests_to_run}")
 
+        # Save impacted tests into a file
         with open("impacted_tests.txt", "w", encoding="utf-8") as f:
             for test in all_tests_to_run:
                 f.write(test + "\n")
 
         logging.info("Saved impacted tests to impacted_tests.txt")
 
+        # Run them locally only (skip on GitHub CI)
         if os.getenv("GITHUB_ACTIONS", "").lower() != "true":
             logging.info("Running impacted tests locally...")
             os.system(f"pytest {' '.join(all_tests_to_run)}")
