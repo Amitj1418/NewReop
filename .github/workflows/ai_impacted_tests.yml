@@ -35,7 +35,6 @@ jobs:
           if [ -s impacted_tests.txt ]; then
             echo "Running impacted tests..."
             xvfb-run pytest $(cat impacted_tests.txt)
-#            pytest $(cat impacted_tests.txt)
           else
             echo "No impacted tests found. Skipping."
           fi
