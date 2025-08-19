@@ -13,4 +13,4 @@ class TestValidateUser:
 
     def test_valid_login_hospital_user(self):
        self.login_page.login_with_hospital_user("ayyajj@futurismtechnologies.com")
-       self.login_page.assert_toast_contains("Invalid Email or Password")
+       self.login_page.assert_toast_contains("Please enter email registered with the hospital")
