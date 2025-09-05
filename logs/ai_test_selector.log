@@ -212,3 +212,7 @@
 2025-09-05 13:30:34 [INFO] Impacted tests identified: ['tests/test_001_validate_username_password.py', 'tests/test_003_validate_username_password_hospital_user.py']
 2025-09-05 13:30:34 [INFO] Saved impacted tests to impacted_tests.txt
 2025-09-05 13:30:34 [INFO] Running impacted tests locally...
+2025-09-05 13:31:35 [INFO] === Fully AI-Driven Test Runner v2 (UTF-8 Safe, Corrected) Started ===
+2025-09-05 13:31:36 [INFO] Changed methods detected: set()
+2025-09-05 13:31:36 [INFO] Changed locators detected: set()
+2025-09-05 13:32:27 [WARNING] No impacted test files found. Exiting.
