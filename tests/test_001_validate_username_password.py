@@ -15,7 +15,7 @@ class TestCheckout:
         self.login_page.login_with_super_admin("ayyajj@futurismtechnologies.com", "Ayyaj@123")
         self.login_page.validate_dashboard_page()
         assert self.login_page.validate_url("https://synergymedqa.futurismdemo.com/#/admin/home")
-        assert self.login_page.validate_url("https://synergymedqa.futurismdemo.com/#/admin/home")
+        print("AI base")
 
 
 
