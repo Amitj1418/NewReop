@@ -1,2 +1,3 @@
 tests/test_001_validate_username_password.py
 tests/test_003_validate_username_password_hospital_user.py
+tests/test_login.py
